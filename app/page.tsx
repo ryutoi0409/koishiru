@@ -108,7 +108,6 @@ export default function Home() {
     return `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  // --- 投稿処理 ---
   const handlePost = async () => {
     if (!detail.trim()) {
       setNotice("相談内容を入力してください。");
@@ -118,14 +117,14 @@ export default function Home() {
     const newPost = {
       id: Date.now(),
       name: postName.trim() || "名無し",
-      meet: meet || "未設定",
-      relationship: relationship || "未設定",
-      time: time || "未設定",
-      length: length || "未設定",
-      dateType: dateType || "未設定",
-      reaction: reaction || "未設定",
-      afterStatus: afterStatus || "未設定",
-      selfFeeling: selfFeeling || "未設定",
+      meet: meet || "未選択",
+      relationship: relationship || "未選択",
+      time: time || "未選択",
+      length: length || "未選択",
+      dateType: dateType || "未選択",
+      reaction: reaction || "未選択",
+      afterStatus: afterStatus || "未選択",
+      selfFeeling: selfFeeling || "未選択",
       detail: detail.trim(),
       status: "approved",
       likes: 0,
@@ -146,7 +145,7 @@ export default function Home() {
 
     setNotice("投稿が完了しました");
     fetchPosts();
-    // 入力欄をすべてリセット
+    // フォームリセット
     setPostName(""); setMeet(""); setRelationship(""); setTime(""); setLength("");
     setDateType(""); setReaction(""); setAfterStatus(""); setSelfFeeling(""); setDetail("");
   };
@@ -206,8 +205,8 @@ export default function Home() {
   const handleEmojiReaction = async (postId: number, emoji: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-    const currentEmojiData = post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 };
-    const newReactions = { ...currentEmojiData, [emoji]: (currentEmojiData[emoji] || 0) + 1 };
+    const currentReactions = post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 };
+    const newReactions = { ...currentReactions, [emoji]: (currentReactions[emoji] || 0) + 1 };
     await supabase.from("posts").update({ emojiReactions: newReactions }).eq("id", postId);
     fetchPosts();
   };
@@ -289,14 +288,8 @@ export default function Home() {
               ))}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
-              <div style={infoCardStyle}>
-                <div style={infoLabelStyle}>このページでできること</div>
-                <div style={infoTextStyle}>恋愛の違和感や失敗を整理して投稿し、他の人の視点から「何が問題だったのか」を知ることができます。</div>
-              </div>
-              <div style={infoCardStyle}>
-                <div style={infoLabelStyle}>公開ルール</div>
-                <div style={infoTextStyle}>投稿や回答は運営が確認後に修正・削除する場合があります。</div>
-              </div>
+              <div style={infoCardStyle}><div style={infoLabelStyle}>このページでできること</div><div style={infoTextStyle}>恋愛の違和感や失敗を整理して投稿し、他の人の視点から「何が問題だったのか」を知ることができます。</div></div>
+              <div style={infoCardStyle}><div style={infoLabelStyle}>公開ルール</div><div style={infoTextStyle}>投稿や回答は運営が確認後に修正・削除する場合があります。個人が特定される内容は公開しません。</div></div>
             </div>
           </section>
 
@@ -313,15 +306,14 @@ export default function Home() {
               <Field label="関係"><select style={selectStyle} value={relationship} onChange={(e) => setRelationship(e.target.value)}><option value="">選択</option><option>初対面</option><option>やり取りあり</option><option>知り合い</option></select></Field>
               <Field label="時間帯"><select style={selectStyle} value={time} onChange={(e) => setTime(e.target.value)}><option value="">選択</option><option>昼</option><option>夜</option><option>深夜</option></select></Field>
               <Field label="長さ"><select style={selectStyle} value={length} onChange={(e) => setLength(e.target.value)}><option value="">選択</option><option>1h前後</option><option>2h前後</option><option>4h以上</option></select></Field>
-              <Field label="内容"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>映画</option><option>その他</option></select></Field>
-              <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>盛り上がった</option><option>普通</option><option>微妙</option></select></Field>
+              <Field label="内容"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>その他</option></select></Field>
+              <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>良好</option><option>普通</option><option>微妙</option></select></Field>
               <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>既読無視</option><option>継続中</option></select></Field>
+              {/* 「手応え」修正済み */}
               <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>最高（脈あり）</option><option>ふつう</option><option>微妙（空回り）</option><option>脈なし（失敗）</option></select></Field>
             </div>
 
-            <Field label="相談内容" fullWidth>
-              <textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
-            </Field>
+            <Field label="相談内容" fullWidth><textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} /></Field>
 
             <button onClick={handlePost} style={mainButtonStyle}>相談を投稿する</button>
             {notice && <div style={{...noticeBoxStyle, color: notice.includes("完了") ? "#2ecc71" : "#e74c3c", marginTop: "10px"}}>{notice}</div>}
@@ -331,71 +323,29 @@ export default function Home() {
         {/* Timeline */}
         <section style={{ marginTop: "24px", display: "grid", gap: "20px" }}>
           <h2 style={{ fontSize: "24px" }}>相談一覧</h2>
-
-          {posts.length === 0 ? (
-            <div style={emptyTextStyle}>まだ投稿はありません。</div>
-          ) : (
+          {posts.length === 0 ? (<div style={emptyTextStyle}>まだ投稿はありません。</div>) : (
             posts.map((post) => {
               const totalVotes = (post.ariCount || 0) + (post.nashiCount || 0);
               const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
               return (
                 <div key={post.id} style={postCardStyle}>
-                  <div className="meta-grid">
-                    <Meta label="出会い" value={post.meet} />
-                    <Meta label="関係" value={post.relationship} />
-                    <Meta label="時間" value={post.time} />
-                    <Meta label="内容" value={post.dateType} />
-                  </div>
-
+                  <div className="meta-grid"><Meta label="出会い" value={post.meet} /><Meta label="関係" value={post.relationship} /><Meta label="時間" value={post.time} /><Meta label="内容" value={post.dateType} /></div>
                   <div style={voteContainerStyle}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "8px" }}>
-                      <span style={{ color: "#ff4d94", fontWeight: "bold" }}>脈あり {ariPer}%</span>
-                      <span style={{ color: "#888" }}>脈なし {100 - ariPer}%</span>
-                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "8px" }}><span style={{ color: "#ff4d94", fontWeight: "bold" }}>脈あり {ariPer}%</span><span style={{ color: "#888" }}>脈なし {100 - ariPer}%</span></div>
                     <div style={gaugeBarStyle}><div style={{ ...ariGaugeStyle, width: `${ariPer}%` }} /></div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                      <button onClick={() => handleVote(post.id, 'ari')} style={voteButtonStyle}>脈あり👍</button>
-                      <button onClick={() => handleVote(post.id, 'nashi')} style={voteButtonStyle}>脈なし💀</button>
-                    </div>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}><button onClick={() => handleVote(post.id, 'ari')} style={voteButtonStyle}>脈あり👍</button><button onClick={() => handleVote(post.id, 'nashi')} style={voteButtonStyle}>脈なし💀</button></div>
                   </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", gap: "10px", alignItems: "flex-start" }}>
-                    <div style={{ color: "#cfcfcf", fontSize: "12px" }}>{post.name} <span style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</span></div>
-                    {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "10px", background: "none", border: "none", cursor: "pointer" }}>削除</button>}
-                  </div>
-                  
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", gap: "10px", alignItems: "flex-start" }}><div style={{ color: "#cfcfcf", fontSize: "12px" }}>{post.name} <span style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</span></div>{isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "10px", background: "none", border: "none", cursor: "pointer" }}>削除</button>}</div>
                   <div style={postDetailStyle}>{post.detail}</div>
-
-                  {post.updates?.map(up => (
-                    <div key={up.id} style={updateBubbleStyle}>
-                      <div style={{ fontSize: "10px", color: "#8aa", marginBottom: "4px" }}>追記 {up.createdAt}</div>
-                      {up.text}
-                    </div>
-                  ))}
+                  {post.updates?.map(up => (<div key={up.id} style={updateBubbleStyle}><div style={{ fontSize: "10px", color: "#8aa", marginBottom: "4px" }}>追記 {up.createdAt}</div>{up.text}</div>))}
                   <UpdateInput onAdd={(text: string) => handleAddUpdate(post.id, text)} />
-
-                  <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                    <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes || 0}</button>
-                    <button onClick={() => handleShareToX(post)} style={subButtonStyle}>Xで共有</button>
-                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {Object.entries(post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 }).map(([emoji, count]) => (
-                        <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || 0}</button>
-                      ))}
-                    </div>
-                  </div>
-
+                  <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}><button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes || 0}</button><button onClick={() => handleShareToX(post)} style={subButtonStyle}>X</button><div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>{Object.entries(post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 }).map(([emoji, count]) => (<button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || 0}</button>))}</div></div>
                   <div style={answerContainerStyle}>
                     <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>回答一覧</div>
-                    <div style={{ display: "grid", gap: "12px" }}>
+                    <div style={{ display: "grid", gap: "12px", marginBottom: "16px" }}>
                       {post.answers.map((ans) => (
                         <div key={ans.id} style={{ ...answerItemStyle, border: ans.isBest ? "1px solid #ffd700" : "1px solid rgba(255,255,255,0.06)" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                            <div style={{ fontSize: "11px", color: "#888" }}>{ans.isBest && "👑 "}{ans.name} ({ans.attr})</div>
-                            <div style={{display:"flex", gap:"8px"}}>
-                              {isAdmin && <button onClick={() => handleSetBestAnswer(post.id, ans.id)} style={{ color: "#ffd700", fontSize: "9px", background: "none", border: "none" }}>ベスト</button>}
-                              {isAdmin && <button onClick={() => handleDeleteAnswer(post.id, ans.id)} style={{ color: "#ff4d4d", fontSize: "9px", background: "none", border: "none" }}>削除</button>}
-                            </div>
-                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}><div style={{ fontSize: "11px", color: "#888" }}>{ans.isBest && "👑 "}{ans.name} ({ans.attr})</div><div style={{display:"flex", gap:"8px"}}>{isAdmin && <button onClick={() => handleSetBestAnswer(post.id, ans.id)} style={{ color: "#ffd700", fontSize: "9px", background: "none", border: "none" }}>ベスト</button>}{isAdmin && <button onClick={() => handleDeleteAnswer(post.id, ans.id)} style={{ color: "#ff4d4d", fontSize: "9px", background: "none", border: "none" }}>削除</button>}</div></div>
                           <div style={{fontSize: "14px"}}>{ans.text}</div>
                           <button onClick={() => handleAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 8px", marginTop: "8px", background: "rgba(255,255,255,0.05)"}}>❤ {ans.likes || 0}</button>
                         </div>
@@ -413,7 +363,6 @@ export default function Home() {
   );
 }
 
-// 内部コンポーネント（省略なし）
 function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   const [show, setShow] = useState(false);
@@ -429,14 +378,13 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
   const [attr, setAttr] = useState("20代・女性");
-  return (<div style={{ marginTop: "14px" }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}><input placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} style={answerInputStyle} /><select value={attr} onChange={(e) => setAttr(e.target.value)} style={selectStyle}><option>20代・女性</option><option>20代・男性</option><option>30代以上</option></select></div><textarea placeholder="回答..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "60px"}} /><button onClick={() => { onAnswer(postId, name, attr, text); setName(""); setText(""); }} style={{...mainButtonStyle, padding: "10px", fontSize: "13px", marginTop: "8px"}}>回答する</button></div>);
+  return (<div style={{ marginTop: "14px" }}><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}><input placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} style={answerInputStyle} /><select value={attr} onChange={(e) => setAttr(e.target.value)} style={selectStyle}><option>20代・女性</option><option>20代・男性</option><option>30代以上</option><option>既婚・女性</option><option>既婚・男性</option></select></div><textarea placeholder="回答・アドバイスを投稿..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "60px"}} /><button onClick={() => { onAnswer(postId, name, attr, text); setName(""); setText(""); }} style={{...mainButtonStyle, padding: "10px", fontSize: "13px", marginTop: "8px"}}>回答を投稿する</button></div>);
 }
 
 function Meta({ label, value }: { label: string; value: string }) {
   return <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}><div style={{ fontSize: "10px", color: "#666", marginBottom: "2px" }}>{label}</div><div style={{ fontSize: "12px", color: "#ddd" }}>{value || "-"}</div></div>;
 }
 
-// スタイル定義（省略なし）
 const inputStyle = { width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.3)", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
 const selectStyle = { ...inputStyle, appearance: "none" as const };
 const textareaStyle = { ...inputStyle, minHeight: "120px", resize: "vertical" as const };
