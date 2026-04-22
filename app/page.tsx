@@ -57,7 +57,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 表示順切り替え用のステート
+  // 【新機能】表示切り替え用のステート
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
 
   // ★管理者設定
@@ -227,7 +227,7 @@ export default function Home() {
     window.open(url, "_blank");
   };
 
-  // 表示用フィルタリングとソート
+  // 【新機能】並び替えロジック
   const sortedPosts = [...posts].sort((a, b) => {
     if (filterTab === "盛り上がり") {
       return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
@@ -270,7 +270,7 @@ export default function Home() {
                     .main-grid { flex-direction: row !important; align-items: start; }
                     .side-section { width: 450px !important; flex-shrink: 0; position: sticky; top: 20px; }
                 }
-                .meta-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr) !important; }
                 @media (min-width: 640px) {
                     .meta-grid { grid-template-columns: repeat(4, 1fr) !important; }
                 }
@@ -329,14 +329,14 @@ export default function Home() {
           </section>
         </div>
 
-        {/* Timeline */}
+        {/* Timeline (新機能：切り替えタブ追加) */}
         <section style={{ marginTop: "40px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "20px", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div>
               <h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2>
             </div>
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "10px" }}>
+            <div style={{ display: "flex", gap: "8px", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
               <button onClick={() => setFilterTab("NEW")} style={{ ...tabBtnStyle, background: filterTab === "NEW" ? "rgba(255,255,255,0.1)" : "transparent" }}>NEW</button>
               <button onClick={() => setFilterTab("盛り上がり")} style={{ ...tabBtnStyle, background: filterTab === "盛り上がり" ? "rgba(255,255,255,0.1)" : "transparent" }}>盛り上がり</button>
             </div>
@@ -349,7 +349,7 @@ export default function Home() {
               sortedPosts.map((post, index) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const showNewBadge = index < 3 && filterTab === "NEW"; // 最新3件にNEWバッジ
+                const showNewBadge = index < 3 && filterTab === "NEW";
 
                 return (
                   <div key={post.id} style={postCardStyle}>
@@ -415,6 +415,7 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
+                      {/* 【新機能：細分化属性対応のAnswerBox】 */}
                       <AnswerBox postId={post.id} onAnswer={handleAnswer} />
                     </div>
                   </div>
@@ -444,11 +445,10 @@ function Field({ label, children, fullWidth = false }: { label: string; children
   return <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}><label style={{ display: "block", marginBottom: "6px", fontSize: "12px", color: "#8f8f8f" }}>{label}</label>{children}</div>;
 }
 
+// 【新機能：属性細分化 AnswerBox】
 function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
-  
-  // 新しい属性ステート（既婚選択 → 年齢）
   const [marriage, setMarriage] = useState("未婚");
   const [age, setAge] = useState("20代");
   const [gender, setGender] = useState("女性");
@@ -464,22 +464,14 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
     <div style={{ marginTop: "14px", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "16px" }}>
       <div style={{ display: "grid", gap: "10px", marginBottom: "10px" }}>
         <input placeholder="お名前（匿名可）" value={name} onChange={(e) => setName(e.target.value)} style={answerInputStyle} />
-        
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
           {!isPrivate ? (
             <>
-              <select value={marriage} onChange={e => setMarriage(e.target.value)} style={smallSelectStyle}>
-                <option>未婚</option><option>既婚</option><option>バツイチ</option>
-              </select>
-              <select value={age} onChange={e => setAge(e.target.value)} style={smallSelectStyle}>
-                <option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代以上</option>
-              </select>
-              <select value={gender} onChange={e => setGender(e.target.value)} style={smallSelectStyle}>
-                <option>女性</option><option>男性</option><option>回答なし</option>
-              </select>
+              <select value={marriage} onChange={e => setMarriage(e.target.value)} style={smallSelectStyle}><option>未婚</option><option>既婚</option><option>バツイチ</option></select>
+              <select value={age} onChange={e => setAge(e.target.value)} style={smallSelectStyle}><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代以上</option></select>
+              <select value={gender} onChange={e => setGender(e.target.value)} style={smallSelectStyle}><option>女性</option><option>男性</option><option>回答なし</option></select>
             </>
           ) : <span style={{fontSize: "12px", color: "#666"}}>属性は非公開になります</span>}
-          
           <label style={{ fontSize: "11px", color: "#888", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
             <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} /> 非公開にする
           </label>
