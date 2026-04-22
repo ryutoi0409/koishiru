@@ -353,17 +353,21 @@ export default function Home() {
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
             <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>KOISHIRU CONCEPT</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋の答え合わせは、<br />友達以外に頼もう。</h1>
-            <p style={{ margin: "0 0 34px 0", color: "#c8c8c8", fontSize: "15px", lineHeight: "1.9", maxWidth: "640px" }}>友達は気を使って本当のことを言ってくれないから。コイシルは、利害関係のない第3者から客観的な「恋のセカンドオピニオン」をもらい、真実を「知る」ための場所。</p>
+            <p style={{ margin: "0 0 34px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>
+              友達は気を使って本当のことを言ってくれないから。コイシルは、第3者の視点から「脈あり・なし」をデータと本音で判定する、恋愛特化型の答え合わせプラットフォームです。<br /><br />
+              <strong style={{color: "#fff"}}>コイシル（恋を知る）の意味：</strong><br />
+              主観や優しさというフィルターを外し、客観的な事実としての「恋の現在地」を知る。友達には話せない濃い悩みを投稿し、深い洞察を知るための場所です。
+            </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "28px" }}>
-              {[["01", "モヤッを可視化"], ["02", "荒れない管理所"], ["03", "恋のセカンドオピニオン"], ["04", "みんなの教訓"]].map(([num, title]) => (
+              {[["01", "小さな『モヤッ』を可視化"], ["02", "本音だけど、荒れない管理"], ["03", "第3者の『鳥の目』を借りる"], ["04", "恋の失敗を、みんなの教訓に"]].map(([num, title]) => (
                 <div key={num} style={{ padding: "16px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ fontSize: "10px", color: "#8f8f8f", marginBottom: "8px" }}>POINT {num}</div>
+                  <div style={{ fontSize: "10px", color: "#8f8f8f", marginBottom: "8px" }}>STEP {num}</div>
                   <div style={{ fontSize: "15px", fontWeight: 700 }}>{title}</div>
                 </div>
               ))}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
-              <div style={infoCardStyle}><div style={infoLabelStyle}>コイシルでできること</div><div style={infoTextStyle}>恋愛の違和感や失敗を整理して投稿し、他の人の視点から「何が問題だったのか」を知ることができます。</div></div>
+              <div style={infoCardStyle}><div style={infoLabelStyle}>コイシルでできること</div><div style={infoTextStyle}>デート後の違和感を整理して投稿。みんなの投票で「客観的な脈」を知ることができます。</div></div>
               <div style={infoCardStyle}><div style={infoLabelStyle}>安心の非公開ルール</div><div style={infoTextStyle}>会員登録不要。4桁の鍵で本人確認を行い、匿名性を保ちながら生々しい本音をやり取りできます。</div></div>
             </div>
           </section>
@@ -424,7 +428,7 @@ export default function Home() {
               <textarea placeholder="相手の言動や、気になったポイントを詳しく..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
             </Field>
             <button onClick={handlePost} style={mainButtonStyle}>答え合わせを依頼する</button>
-            {notice && <div style={{...noticeBoxStyle, color: notice.includes("完了") ? "#2ecc71" : "#e74c3c"}}>{notice}</div>}
+            {notice && <div style={{...noticeBoxStyle, color: notice.includes("完了") ? "#2ecc71" : "#e74c3c", textAlign: "center"}}>{notice}</div>}
           </section>
         </div>
 
@@ -455,7 +459,8 @@ export default function Home() {
                 const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
 
                 return (
-                  <div key={post.id} style={{ ...postCardStyle, background: "rgba(255,255,255,0.04)", boxShadow: "0 10px 40px rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div key={post.id} style={{ ...postCardStyle, background: "rgba(255,255,255,0.04)", boxShadow: "0 10px 40px rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)", padding: "clamp(20px, 4vw, 32px)" }}>
+                    {/* カードヘッダー */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         {showNewBadge && <span style={newBadgeStyle}>NEW</span>}
@@ -468,6 +473,7 @@ export default function Home() {
                       </div>
                     </div>
                     
+                    {/* メタ情報チップ */}
                     <div className="compact-meta-container">
                       {post.tags?.map(t => <span key={t} style={{ fontSize: "10px", color: "#3498db", background: "rgba(52,152,219,0.15)", padding: "2px 8px", borderRadius: "4px" }}>#{t}</span>)}
                       <Meta label="出会い" value={post.meet} />
@@ -480,6 +486,7 @@ export default function Home() {
                       <Meta label="手応え" value={post.selfFeeling} />
                     </div>
 
+                    {/* 脈あり投票ゲージ */}
                     <div style={voteContainerStyle}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "8px" }}>
                         <span style={{ color: "#ff4d94", fontWeight: "bold" }}>脈あり {ariPer}%</span>
@@ -492,8 +499,10 @@ export default function Home() {
                       </div>
                     </div>
 
+                    {/* 相談本文 */}
                     <div style={{ ...postDetailStyle, fontSize: "16px", color: "#fff" }}>{post.detail}</div>
 
+                    {/* 追記（追いコイシル） */}
                     {post.updates?.map(up => (
                       <div key={up.id} style={updateBubbleStyle}>
                         <div style={{ fontSize: "10px", color: "#8aa", marginBottom: "4px", fontWeight: "bold" }}>本人からの追記 {up.createdAt}</div>
@@ -502,6 +511,7 @@ export default function Home() {
                     ))}
                     <UpdateInput onAdd={(text) => handleAddUpdate(post, text)} />
 
+                    {/* アクションボタン */}
                     <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "20px" }}>
                       <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes}</button>
                       <button onClick={() => handleShareToX(post)} style={subButtonStyle}>Xで共有</button>
@@ -513,8 +523,10 @@ export default function Home() {
                       {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "11px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>}
                     </div>
 
+                    {/* 回答エリア */}
                     <div style={answerContainerStyle}>
                       <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "14px", color: "#fff" }}>みんなのセカンドオピニオン</div>
+                      {/* 回答ドロップ開閉 */}
                       <AnswerList 
                         post={post} 
                         isAdmin={isAdmin} 
@@ -522,6 +534,7 @@ export default function Home() {
                         onLike={(aid:number)=>handleAnswerLike(post.id, aid)} 
                         onDelete={(aid:number)=>handleDeleteAnswer(post.id, aid)} 
                       />
+                      {/* 回答入力ボックス */}
                       <AnswerBox post={post} onAnswer={handleAnswer} onAddUpdate={handleAddUpdate} />
                     </div>
                   </div>
@@ -530,8 +543,9 @@ export default function Home() {
             )}
           </div>
 
+          {/* ページネーション */}
           {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", marginTop: "30px", marginBottom: "50px" }}>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "40px", marginBottom: "60px" }}>
               <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...paginationBtnStyle, opacity: currentPage === 1 ? 0.3 : 1 }}>← 前へ</button>
               <span style={{fontSize: "14px", color: "#888"}}>{currentPage} / {totalPages}</span>
               <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ ...paginationBtnStyle, opacity: currentPage === totalPages ? 0.3 : 1 }}>次へ →</button>
@@ -616,31 +630,27 @@ function AnswerBox({ post, onAnswer, onAddUpdate }: any) {
   return (
     <div style={{ background: "rgba(0,0,0,0.2)", padding: "18px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.03)" }}>
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
-        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>第3者として</button>
-        <button onClick={() => setIsAuthorMode(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: isAuthorMode ? "#3498db" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>本人として</button>
+        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>第3者回答</button>
+        <button onClick={() => setIsAuthorMode(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: isAuthorMode ? "#3498db" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>本人返信</button>
       </div>
 
       {!isAuthorMode && (
         <div style={{ marginBottom: "12px" }}>
-          <input placeholder="お名前（匿名可）" value={name} onChange={e => setName(e.target.value)} style={{...answerInputStyle, marginBottom: "8px", padding: "10px", fontSize: "13px"}} />
+          <input placeholder="名前" value={name} onChange={e => setName(e.target.value)} style={{...answerInputStyle, marginBottom: "8px", padding: "10px", fontSize: "13px"}} />
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-            {!isPrivate ? (
-              <>
-                <select value={marriage} onChange={e => setMarriage(e.target.value)} style={smallSelectStyle}><option>未婚</option><option>既婚</option><option>バツイチ</option></select>
-                <select value={age} onChange={e => setAge(e.target.value)} style={smallSelectStyle}><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代+</option></select>
-                <select value={gender} onChange={e => setGender(e.target.value)} style={smallSelectStyle}><option>女性</option><option>男性</option><option>その他</option></select>
-              </>
-            ) : <span style={{fontSize: "12px", color: "#666"}}>属性非公開</span>}
-            <label style={{ fontSize: "11px", color: "#888", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
-              <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} /> 匿名で投稿
+            <select value={marriage} onChange={e => setMarriage(e.target.value)} style={smallSelectStyle} disabled={isPrivate}><option>未婚</option><option>既婚</option><option>バツイチ</option></select>
+            <select value={age} onChange={e => setAge(e.target.value)} style={smallSelectStyle} disabled={isPrivate}><option>10代</option><option>20代</option><option>30代</option><option>40代</option><option>50代+</option></select>
+            <select value={gender} onChange={e => setGender(e.target.value)} style={smallSelectStyle} disabled={isPrivate}><option>女性</option><option>男性</option></select>
+            <label style={{ fontSize: "11px", color: "#888", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+              <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} /> 匿名
             </label>
           </div>
         </div>
       )}
 
-      <textarea placeholder={isAuthorMode ? "回答への返信や状況の追記..." : "本音のアドバイスを投稿..."} value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "80px", padding: "12px"}} />
+      <textarea placeholder={isAuthorMode ? "返答や進展を追記..." : "答え合わせを投稿..."} value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "80px", padding: "12px"}} />
       <button onClick={handleSubmit} style={{...mainButtonStyle, padding: "12px", fontSize: "14px", marginTop: "12px", background: isAuthorMode ? "#3498db" : "#fff", color: isAuthorMode ? "#fff" : "#000"}}>
-        {isAuthorMode ? "本人として送信" : "答え合わせを投稿"}
+        {isAuthorMode ? "本人として送信" : "回答を投稿"}
       </button>
     </div>
   );
@@ -649,7 +659,7 @@ function AnswerBox({ post, onAnswer, onAddUpdate }: any) {
 function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   const [show, setShow] = useState(false);
-  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "14px", background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", textDecoration: "underline" }}>+ 状況が変わったら追記する（追いコイシル）</button>;
+  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "14px", background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", textDecoration: "underline" }}>+ 追いコイシル（状況を追記）</button>;
   return (
     <div style={{ marginTop: "14px", display: "flex", gap: "8px" }}>
       <input placeholder="その後どうなりましたか？" value={text} onChange={e => setText(e.target.value)} style={answerInputStyle} />
@@ -681,8 +691,8 @@ const subButtonStyle = { padding: "8px 14px", borderRadius: "10px", border: "non
 const infoCardStyle = { padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" };
 const infoLabelStyle = { fontSize: "11px", color: "#666", marginBottom: "4px", fontWeight: "bold" };
 const infoTextStyle = { fontSize: "13px", lineHeight: "1.6", color: "#ccc" };
-const emptyTextStyle = { padding: "60px 20px", color: "#444", fontSize: "15px", textAlign: "center" as const };
-const postCardStyle = { borderRadius: "32px", padding: "clamp(20px, 4vw, 32px)" };
+const emptyTextStyle = { padding: "60px 20px", color: "#444", fontSize: "14px", textAlign: "center" as const };
+const postCardStyle = { borderRadius: "32px" };
 const postDetailStyle = { lineHeight: "1.8", whiteSpace: "pre-wrap" as const, margin: "20px 0" };
 const answerContainerStyle = { marginTop: "24px", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.08)" };
 const voteContainerStyle = { margin: "16px 0", padding: "16px", background: "rgba(0,0,0,0.2)", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.03)" };
