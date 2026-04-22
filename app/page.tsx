@@ -1,13 +1,3 @@
-大変失礼いたしました。
-画像リンクが切れてしまう問題を根本から解決しつつ、あなたが提示してくれた**「全ての機能（ページネーション、管理者機能、追記、属性選択、投票、エモリアクション等）」を一文字も削らずに**、ご指示通りに「不要な5項目（時間帯、長さ、内容、手ごたえ、その後）」を削除した**【究極のフルスペック・マスターコード】**を再構築しました。
-
-画像が表示されない問題への対策として、**ロゴ部分はブラウザが直接描画するSVG形式でコード内に埋め込みました。** これにより、外部サーバーに依存せず、100%確実にあなたのデザイン意図通りのロゴが表示されます。
-
----
-
-### 🚀 【真・完全無欠版】一切の省略なし・SVGロゴ埋め込み・5項目削除
-
-```tsx
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -500,4 +490,3 @@ const smallSelectStyle = { ...inputStyle, width: "auto", padding: "4px 8px", fon
 const paginationBtnStyle = { padding: "10px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: "12px", cursor: "pointer" };
 const noticeBoxStyle = { marginTop: "10px", fontSize: "12px" };
 const postCardStyle = { borderRadius: "32px" };
-```
