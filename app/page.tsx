@@ -175,6 +175,7 @@ export default function Home() {
     setCurrentPage(1);
   };
 
+  // ★認証用関数 (一字一句維持しつつ削除権限にも流用)
   const checkAuth = (post: Post) => {
     if (isAdmin) return true;
     const input = prompt("秘密の鍵（4桁の数字）を入力してください");
@@ -190,10 +191,14 @@ export default function Home() {
     fetchPosts();
   };
 
-  const handleDeletePost = async (postId: number) => {
-    if (!isAdmin) return;
+  // ★投稿者本人も削除可能に修正 (ロジックのみ変更)
+  const handleDeletePost = async (post: Post) => {
+    if (!checkAuth(post)) {
+      alert("権限がありません");
+      return;
+    }
     if (confirm("この相談を削除しますか？")) {
-      await supabase.from("posts").delete().eq("id", postId);
+      await supabase.from("posts").delete().eq("id", post.id);
       fetchPosts();
     }
   };
@@ -262,6 +267,7 @@ export default function Home() {
     fetchPosts();
   };
 
+  // ★ベストアンサー設定 (投稿者/管理者のみ)
   const handleSetBestAnswer = async (postId: number, answerId: number) => {
     const post = posts.find(p => p.id === postId);
     if (!post || !checkAuth(post)) {
@@ -397,7 +403,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Post Form */}
+          {/* Post Form (5項目を削除) */}
           <section className="side-section" style={{ borderRadius: "32px", padding: "clamp(20px, 5vw, 32px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)" }}>
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "12px", letterSpacing: "0.12em", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
@@ -431,6 +437,7 @@ export default function Home() {
                   }}>{tag}</button>
                 ))}
               </div>
+              {/* ★タグ追加機能 UIパーツ */}
               <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                 <input placeholder="新しいタグを作る..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
                 <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>追加</button>
@@ -526,7 +533,8 @@ export default function Home() {
                           <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
                         ))}
                       </div>
-                      {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "11px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>}
+                      {/* ★投稿者本人(要鍵)または管理者だけが削除可能 */}
+                      <button onClick={() => handleDeletePost(post)} style={{ color: "#ff4d4d", fontSize: "11px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>
                     </div>
                   </div>
                 );
@@ -571,7 +579,6 @@ function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
                   {ans.isAuthor && "👤 投稿者本人 "} {ans.isBest && "👑 "}{ans.name} ({ans.attr}) · {ans.createdAt}
                 </span>
                 <div style={{display: "flex", gap: "10px"}}>
-                  {/* ★本人または管理者のみベスト回答ボタンを表示 */}
                   <button onClick={() => onSetBest(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ffd700", fontSize: "10px", cursor: "pointer" }}>👑</button>
                   {isAdmin && <button onClick={() => onDelete(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ff4d4d", fontSize: "10px", cursor: "pointer" }}>削除</button>}
                 </div>
