@@ -60,7 +60,7 @@ export default function Home() {
   // 表示順切り替え用のステート
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
   
-  // ページネーション用ステート
+  // ページネーション用
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 4;
 
@@ -146,7 +146,7 @@ export default function Home() {
     fetchPosts();
     setPostName(""); setMeet(""); setRelationship(""); setTime(""); setLength("");
     setDateType(""); setReaction(""); setAfterStatus(""); setSelfFeeling(""); setDetail("");
-    setCurrentPage(1); // 投稿後は1ページ目に戻す
+    setCurrentPage(1);
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -232,7 +232,7 @@ export default function Home() {
     window.open(url, "_blank");
   };
 
-  // --- 表示用フィルタリングとソート ---
+  // 表示用フィルタリングとソート
   const sortedPosts = [...posts].sort((a, b) => {
     if (filterTab === "盛り上がり") {
       return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
@@ -240,7 +240,7 @@ export default function Home() {
     return b.id - a.id;
   });
 
-  // --- ページネーション計算 ---
+  // ページネーション計算
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
@@ -254,7 +254,7 @@ export default function Home() {
         minHeight: "100vh",
         background: "radial-gradient(circle at top, #1c1c1c 0%, #0b0b0b 42%, #050505 100%)",
         color: "#ffffff",
-        padding: "clamp(16px, 4vw, 48px) clamp(10px, 3vw, 20px)",
+        padding: "clamp(20px, 5vw, 48px) clamp(12px, 3vw, 20px)",
         fontFamily: 'Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif',
       }}
     >
@@ -281,12 +281,12 @@ export default function Home() {
                     .main-grid { flex-direction: row !important; align-items: start; }
                     .side-section { width: 450px !important; flex-shrink: 0; position: sticky; top: 20px; }
                 }
-                /* メタ情報のグリッドをスマホで2列、PCで4列に自動調整 */
-                .meta-grid { 
-                  display: grid; 
-                  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; 
-                  gap: 8px; 
-                  margin-bottom: 16px; 
+                /* ここでメタ情報を1行にコンパクトに並べる設定 */
+                .compact-meta-container {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 6px;
+                  margin-bottom: 16px;
                 }
             `}</style>
 
@@ -310,7 +310,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Post Form Section */}
+          {/* Post Form */}
           <section className="side-section" style={{ borderRadius: "32px", padding: "clamp(20px, 5vw, 32px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)" }}>
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "12px", letterSpacing: "0.12em", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
@@ -343,112 +343,103 @@ export default function Home() {
           </section>
         </div>
 
-        {/* Timeline Section */}
+        {/* Timeline */}
         <section style={{ marginTop: "40px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div>
-              <h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2>
-            </div>
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "20px", gap: "10px", flexWrap: "wrap" }}>
+            <div><div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div><h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2></div>
+            <div style={{ display: "flex", gap: "8px", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
               <button onClick={() => {setFilterTab("NEW"); setCurrentPage(1);}} style={{ ...tabBtnStyle, background: filterTab === "NEW" ? "rgba(255,255,255,0.1)" : "transparent" }}>NEW</button>
               <button onClick={() => {setFilterTab("盛り上がり"); setCurrentPage(1);}} style={{ ...tabBtnStyle, background: filterTab === "盛り上がり" ? "rgba(255,255,255,0.1)" : "transparent" }}>盛り上がり</button>
             </div>
           </div>
 
           <div style={{ display: "grid", gap: "20px" }}>
-            {currentPosts.length === 0 ? (
-              <div style={emptyTextStyle}>まだ投稿はありません。</div>
-            ) : (
-              currentPosts.map((post, index) => {
-                const totalVotes = post.ariCount + post.nashiCount;
-                const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const isGlobalIndex = indexOfFirstPost + index;
-                const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
+            {currentPosts.map((post, index) => {
+              const totalVotes = post.ariCount + post.nashiCount;
+              const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
+              const isGlobalIndex = indexOfFirstPost + index;
+              const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
 
-                return (
-                  <div key={post.id} style={postCardStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                      {showNewBadge && <span style={newBadgeStyle}>NEW</span>}
-                      <div style={{ color: "#cfcfcf", fontSize: "12px", fontWeight: "bold" }}>{post.name}</div>
-                      <div style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</div>
+              return (
+                <div key={post.id} style={postCardStyle}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                    {showNewBadge && <span style={newBadgeStyle}>NEW</span>}
+                    <div style={{ color: "#cfcfcf", fontSize: "12px" }}>{post.name} <span style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</span></div>
+                  </div>
+                  
+                  {/* 画像のような縦長を解消：横に並べるチップ形式に変更 */}
+                  <div className="compact-meta-container">
+                    <Meta label="出会い" value={post.meet} />
+                    <Meta label="関係" value={post.relationship} />
+                    <Meta label="時間" value={post.time} />
+                    <Meta label="長さ" value={post.length} />
+                    <Meta label="内容" value={post.dateType} />
+                    <Meta label="反応" value={post.reaction} />
+                    <Meta label="その後" value={post.afterStatus} />
+                    <Meta label="手応え" value={post.selfFeeling} />
+                  </div>
+
+                  <div style={voteContainerStyle}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "8px" }}>
+                      <span style={{ color: "#ff4d94", fontWeight: "bold" }}>脈あり {ariPer}%</span>
+                      <span style={{ color: "#888" }}>脈なし {100 - ariPer}%</span>
                     </div>
-                    
-                    <div className="meta-grid">
-                      <Meta label="出会い" value={post.meet} />
-                      <Meta label="関係" value={post.relationship} />
-                      <Meta label="時間" value={post.time} />
-                      <Meta label="長さ" value={post.length} />
-                      <Meta label="内容" value={post.dateType} />
-                      <Meta label="反応" value={post.reaction} />
-                      <Meta label="その後" value={post.afterStatus} />
-                      <Meta label="手応え" value={post.selfFeeling} />
-                    </div>
-
-                    <div style={voteContainerStyle}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "8px" }}>
-                        <span style={{ color: "#ff4d94", fontWeight: "bold" }}>脈あり {ariPer}%</span>
-                        <span style={{ color: "#888" }}>脈なし {100 - ariPer}%</span>
-                      </div>
-                      <div style={gaugeBarStyle}><div style={{ ...ariGaugeStyle, width: `${ariPer}%` }} /></div>
-                      <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-                        <button onClick={() => handleVote(post.id, 'ari')} style={voteButtonStyle}>脈あり👍</button>
-                        <button onClick={() => handleVote(post.id, 'nashi')} style={voteButtonStyle}>脈なし💀</button>
-                      </div>
-                    </div>
-
-                    <div style={postDetailStyle}>{post.detail}</div>
-
-                    {post.updates?.map(up => (
-                      <div key={up.id} style={updateBubbleStyle}>
-                        <div style={{ fontSize: "10px", color: "#8aa", marginBottom: "4px", fontWeight: "bold" }}>追記 {up.createdAt}</div>
-                        {up.text}
-                      </div>
-                    ))}
-                    <UpdateInput onAdd={(text) => handleAddUpdate(post.id, text)} />
-
-                    <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                      <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes}</button>
-                      <button onClick={() => handleShareToX(post)} style={subButtonStyle}>X</button>
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {Object.entries(post.emojiReactions || {}).map(([emoji, count]) => (
-                          <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
-                        ))}
-                      </div>
-                      {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "10px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>}
-                    </div>
-
-                    <div style={answerContainerStyle}>
-                      <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px", color: "#fff" }}>回答</div>
-                      <div style={{ display: "grid", gap: "12px", marginBottom: "16px" }}>
-                        {post.answers.map((ans) => (
-                          <div key={ans.id} style={{ ...answerItemStyle, border: ans.isBest ? "1px solid #ffd700" : "1px solid rgba(255,255,255,0.06)", background: ans.isBest ? "rgba(255,215,0,0.05)" : "rgba(0,0,0,0.2)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                              <div style={{ fontSize: "11px", color: "#888" }}>{ans.isBest && "👑 "}{ans.name} ({ans.attr}) <span style={{fontSize: "9px"}}>{ans.createdAt}</span></div>
-                              <div style={{display:"flex", gap:"8px"}}>
-                                {isAdmin && <button onClick={() => handleSetBestAnswer(post.id, ans.id)} style={{ color: "#ffd700", fontSize: "9px", background: "none", border: "none" }}>ベスト</button>}
-                                {isAdmin && <button onClick={() => handleDeleteAnswer(post.id, ans.id)} style={{ color: "#ff4d4d", fontSize: "9px", background: "none", border: "none" }}>削除</button>}
-                              </div>
-                            </div>
-                            <div style={{fontSize: "14px", lineHeight: "1.6"}}>{ans.text}</div>
-                            <button onClick={() => handleAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 8px", marginTop: "8px"}}>❤ {ans.likes}</button>
-                          </div>
-                        ))}
-                      </div>
-                      <AnswerBox postId={post.id} onAnswer={handleAnswer} />
+                    <div style={gaugeBarStyle}><div style={{ ...ariGaugeStyle, width: `${ariPer}%` }} /></div>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                      <button onClick={() => handleVote(post.id, 'ari')} style={voteButtonStyle}>脈あり👍</button>
+                      <button onClick={() => handleVote(post.id, 'nashi')} style={voteButtonStyle}>脈なし💀</button>
                     </div>
                   </div>
-                );
-              })
-            )}
+
+                  <div style={postDetailStyle}>{post.detail}</div>
+
+                  {post.updates?.map(up => (
+                    <div key={up.id} style={updateBubbleStyle}>
+                      <div style={{ fontSize: "10px", color: "#8aa", marginBottom: "4px" }}>追記 {up.createdAt}</div>
+                      {up.text}
+                    </div>
+                  ))}
+                  <UpdateInput onAdd={(text) => handleAddUpdate(post.id, text)} />
+
+                  <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes}</button>
+                    <button onClick={() => handleShareToX(post)} style={subButtonStyle}>X</button>
+                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+                      {Object.entries(post.emojiReactions || {}).map(([emoji, count]) => (
+                        <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
+                      ))}
+                    </div>
+                    {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "10px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>}
+                  </div>
+
+                  <div style={answerContainerStyle}>
+                    <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>回答</div>
+                    {post.answers.map((ans) => (
+                      <div key={ans.id} style={{ ...answerItemStyle, border: ans.isBest ? "1px solid #ffd700" : "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <div style={{ fontSize: "11px", color: "#888" }}>{ans.isBest && "👑 "}{ans.name} ({ans.attr}) <span style={{fontSize: "9px"}}>{ans.createdAt}</span></div>
+                          <div style={{display:"flex", gap:"8px"}}>
+                            {isAdmin && <button onClick={() => handleSetBestAnswer(post.id, ans.id)} style={{ color: "#ffd700", fontSize: "9px", background: "none", border: "none" }}>ベスト</button>}
+                            {isAdmin && <button onClick={() => handleDeleteAnswer(post.id, ans.id)} style={{ color: "#ff4d4d", fontSize: "9px", background: "none", border: "none" }}>削除</button>}
+                          </div>
+                        </div>
+                        <div style={{fontSize: "14px"}}>{ans.text}</div>
+                        <button onClick={() => handleAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 8px", marginTop: "8px", background: "rgba(255,255,255,0.8)", color: "#000"}}>❤ {ans.likes}</button>
+                      </div>
+                    ))}
+                    <AnswerBox postId={post.id} onAnswer={handleAnswer} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* ページネーション操作ボタン */}
+          {/* ページネーション */}
           {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "32px", marginBottom: "40px" }}>
-              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...paginationBtnStyle, opacity: currentPage === 1 ? 0.3 : 1 }}>← 前へ</button>
-              <div style={{ fontSize: "14px", color: "#888" }}>{currentPage} / {totalPages}</div>
-              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ ...paginationBtnStyle, opacity: currentPage === totalPages ? 0.3 : 1 }}>次へ →</button>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", marginTop: "30px", marginBottom: "50px" }}>
+              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...paginationBtnStyle, opacity: currentPage === 1 ? 0.3 : 1 }}>前へ</button>
+              <span style={{fontSize: "14px"}}>{currentPage} / {totalPages}</span>
+              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ ...paginationBtnStyle, opacity: currentPage === totalPages ? 0.3 : 1 }}>次へ</button>
             </div>
           )}
         </section>
@@ -457,12 +448,10 @@ export default function Home() {
   );
 }
 
-// --- サブコンポーネント（省略なし） ---
-
 function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   const [show, setShow] = useState(false);
-  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}>+ 追いコイシルを追記する</button>;
+  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer" }}>+ 追いコイシルを追記する</button>;
   return (
     <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
       <input placeholder="追記..." value={text} onChange={e => setText(e.target.value)} style={answerInputStyle} />
@@ -472,7 +461,7 @@ function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
 }
 
 function Field({ label, children, fullWidth = false }: { label: string; children: React.ReactNode; fullWidth?: boolean }) {
-  return <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}><label style={{ display: "block", marginBottom: "6px", fontSize: "12px", color: "#8f8f8f", fontWeight: "bold" }}>{label}</label>{children}</div>;
+  return <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}><label style={{ display: "block", marginBottom: "6px", fontSize: "12px", color: "#8f8f8f" }}>{label}</label>{children}</div>;
 }
 
 function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
@@ -490,9 +479,9 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
   };
 
   return (
-    <div style={{ marginTop: "16px", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+    <div style={{ marginTop: "14px", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "16px" }}>
       <div style={{ display: "grid", gap: "10px", marginBottom: "10px" }}>
-        <input placeholder="お名前（匿名可）" value={name} onChange={(e) => setName(e.target.value)} style={answerInputStyle} />
+        <input placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} style={answerInputStyle} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
           {!isPrivate ? (
             <>
@@ -506,22 +495,20 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
           </label>
         </div>
       </div>
-      <textarea placeholder="アドバイスを投稿..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "80px"}} />
-      <button onClick={handleSubmit} style={{...mainButtonStyle, padding: "12px", fontSize: "14px", marginTop: "10px"}}>回答を投稿する</button>
+      <textarea placeholder="アドバイスを投稿..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "60px"}} />
+      <button onClick={handleSubmit} style={{...mainButtonStyle, padding: "10px", fontSize: "13px", marginTop: "8px"}}>回答を投稿する</button>
     </div>
   );
 }
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-      <div style={{ fontSize: "10px", color: "#555", marginBottom: "2px", fontWeight: "bold" }}>{label}</div>
-      <div style={{ fontSize: "12px", color: "#ddd" }}>{value || "-"}</div>
+    <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: "6px" }}>
+      <span style={{ fontSize: "10px", color: "#666" }}>{label}:</span>
+      <span style={{ fontSize: "11px", color: "#ccc" }}>{value || "-"}</span>
     </div>
   );
 }
-
-// --- スタイル定義 ---
 
 const inputStyle = { width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.3)", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
 const selectStyle = { ...inputStyle, appearance: "none" as const };
@@ -533,18 +520,18 @@ const infoCardStyle = { padding: "16px", borderRadius: "16px", background: "rgba
 const infoLabelStyle = { fontSize: "11px", color: "#666", marginBottom: "4px" };
 const infoTextStyle = { fontSize: "13px", lineHeight: "1.6", color: "#ccc" };
 const emptyTextStyle = { padding: "40px", color: "#555", fontSize: "14px", textAlign: "center" as const };
-const postCardStyle = { borderRadius: "24px", padding: "clamp(16px, 4vw, 24px)", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" };
-const postDetailStyle = { color: "#eee", fontSize: "15px", lineHeight: "1.7", whiteSpace: "pre-wrap" as const, margin: "14px 0" };
+const postCardStyle = { borderRadius: "20px", padding: "20px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" };
+const postDetailStyle = { color: "#eee", fontSize: "14px", lineHeight: "1.7", whiteSpace: "pre-wrap" as const, margin: "10px 0" };
 const answerContainerStyle = { marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" };
-const answerItemStyle = { padding: "12px", borderRadius: "16px", color: "#eee", marginBottom: "10px" };
+const answerItemStyle = { padding: "12px", borderRadius: "12px", background: "rgba(0,0,0,0.2)", color: "#eee", marginBottom: "8px" };
 const answerInputStyle = { width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "#000", color: "#fff", fontSize: "13px", outline: "none", boxSizing: "border-box" as const };
-const voteContainerStyle = { marginBottom: "16px", padding: "14px", background: "rgba(255,255,255,0.03)", borderRadius: "16px" };
+const voteContainerStyle = { marginBottom: "16px", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "12px" };
 const gaugeBarStyle = { height: "6px", background: "#222", borderRadius: "3px", overflow: "hidden", display: "flex" as const };
-const ariGaugeStyle = { background: "#ff4d94", transition: "0.8s" };
-const voteButtonStyle = { flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "12px" };
-const updateBubbleStyle = { marginTop: "12px", padding: "12px", background: "rgba(52,152,219,0.1)", borderRadius: "14px", fontSize: "14px", border: "1px solid rgba(52,152,219,0.2)" };
-const emojiButtonStyle = { padding: "5px 12px", borderRadius: "15px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "12px" };
+const ariGaugeStyle = { background: "#ff4d94", transition: "0.5s" };
+const voteButtonStyle = { flex: 1, padding: "8px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "11px" };
+const updateBubbleStyle = { marginTop: "12px", padding: "10px", background: "rgba(52,152,219,0.1)", borderRadius: "12px", fontSize: "13px", border: "1px solid rgba(52,152,219,0.2)" };
+const emojiButtonStyle = { padding: "5px 10px", borderRadius: "15px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "11px" };
 const noticeBoxStyle = { marginTop: "10px", fontSize: "12px" };
-const tabBtnStyle = { padding: "8px 16px", border: "none", color: "#fff", fontSize: "12px", cursor: "pointer", borderRadius: "8px", transition: "0.2s" };
+const tabBtnStyle = { padding: "6px 14px", border: "none", color: "#fff", fontSize: "11px", cursor: "pointer", borderRadius: "8px", transition: "0.2s" };
 const newBadgeStyle = { background: "#e74c3c", color: "#fff", fontSize: "9px", fontWeight: "bold", padding: "2px 6px", borderRadius: "4px" };
-const paginationBtnStyle = { padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: "10px", cursor: "pointer", fontSize: "12px" };
+const paginationBtnStyle = { padding: "6px 15px", background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "12px" };
