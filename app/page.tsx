@@ -1,5 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// Vercelの環境変数からSupabaseクライアントを作成
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type Answer = {
   id: number;
@@ -9,7 +16,7 @@ type Answer = {
   likes: number;
   createdAt: string; // 投稿日時
   status: "pending" | "approved";
-  isBest?: boolean; // ★ベストアドバイス用
+  isBest?: boolean; // ベストアドバイス用
 };
 
 type Post = {
@@ -25,10 +32,10 @@ type Post = {
   selfFeeling: string;
   detail: string;
   likes: number;
-  ariCount: number; // ★脈あり投票
-  nashiCount: number; // ★脈なし投票
-  emojiReactions: { [key: string]: number }; // ★エモリアクション
-  updates: { id: number; text: string; createdAt: string }[]; // ★追いLINE風追記
+  ariCount: number; // 脈あり投票
+  nashiCount: number; // 脈なし投票
+  emojiReactions: { [key: string]: number }; // エモリアクション
+  updates: { id: number; text: string; createdAt: string }[]; // 追いLINE風追記
   answers: Answer[];
   createdAt: string; // 投稿日時
   status: "pending" | "approved";
@@ -50,22 +57,42 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // ★管理者設定
+  // 管理者設定
   const ADMIN_PASSWORD = "koishiru-admin"; 
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("koishiru_final_master");
-    if (saved) setPosts(JSON.parse(saved));
-    setIsLoaded(true);
-  }, []);
+  // --- Supabaseからデータを取得 ---
+  const fetchPosts = async () => {
+    try {
+      const { data: postsData, error: postsError } = await supabase
+        .from("posts")
+        .select("*")
+        .order("id", { ascending: false });
+
+      const { data: answersData, error: answersError } = await supabase
+        .from("answers")
+        .select("*")
+        .order("id", { ascending: true });
+
+      if (postsError || answersError) throw postsError || answersError;
+
+      const combined = (postsData || []).map((p: any) => ({
+        ...p,
+        answers: (answersData || []).filter((a: any) => a.post_id === p.id)
+      }));
+
+      setPosts(combined);
+    } catch (e) {
+      console.error("Fetch Error:", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
 
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("koishiru_final_master", JSON.stringify(posts));
-    }
-  }, [posts, isLoaded]);
+    fetchPosts();
+  }, []);
 
   const checkAdmin = (val: string) => {
     setInputPass(val);
@@ -81,13 +108,13 @@ export default function Home() {
     return `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!detail.trim()) {
       setNotice("相談内容を入力してください。");
       return;
     }
 
-    const newPost: Post = {
+    const newPost = {
       id: Date.now(),
       name: postName.trim() || "名無し",
       meet, relationship, time, length, dateType, reaction, afterStatus, selfFeeling,
@@ -98,90 +125,96 @@ export default function Home() {
       nashiCount: 0,
       emojiReactions: { "それな": 0, "沼": 0, "尊い": 0, "草": 0 },
       updates: [],
-      answers: [],
       createdAt: getNow(),
     };
 
-    setPosts([newPost, ...posts]);
+    const { error } = await supabase.from("posts").insert([newPost]);
+    if (error) {
+      setNotice("投稿に失敗しました。");
+      return;
+    }
+
+    setNotice("投稿が完了しました");
+    fetchPosts();
     setPostName(""); setMeet(""); setRelationship(""); setTime(""); setLength("");
     setDateType(""); setReaction(""); setAfterStatus(""); setSelfFeeling(""); setDetail("");
-    setNotice("投稿が完了しました");
   };
 
-  const handleDeletePost = (postId: number) => {
+  const handleDeletePost = async (postId: number) => {
     if (!isAdmin) return;
     if (confirm("この相談を削除しますか？")) {
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      await supabase.from("posts").delete().eq("id", postId);
+      fetchPosts();
     }
   };
 
-  const handleDeleteAnswer = (postId: number, answerId: number) => {
+  const handleDeleteAnswer = async (postId: number, answerId: number) => {
     if (!isAdmin) return;
     if (confirm("この回答を削除しますか？")) {
-      setPosts((prev) => prev.map((p) => p.id === postId ? {
-        ...p,
-        answers: p.answers.filter((a) => a.id !== answerId)
-      } : p));
+      await supabase.from("answers").delete().eq("id", answerId);
+      fetchPosts();
     }
   };
 
-  const handleAnswer = (postId: number, name: string, attr: string, text: string) => {
+  const handleAnswer = async (postId: number, name: string, attr: string, text: string) => {
     if (!text.trim()) return;
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId ? {
-          ...p,
-          answers: [...p.answers, {
-            id: Date.now(),
-            name: name.trim() || "名無し",
-            attr, text: text.trim(), likes: 0, status: "approved", createdAt: getNow(),
-          }],
-        } : p
-      )
-    );
+    const newAnswer = {
+      id: Date.now(),
+      post_id: postId,
+      name: name.trim() || "名無し",
+      attr, text: text.trim(), likes: 0, status: "approved", createdAt: getNow(),
+      isBest: false
+    };
+    await supabase.from("answers").insert([newAnswer]);
+    fetchPosts();
   };
 
-  const handlePostLike = (postId: number) => {
-    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
+  const handlePostLike = async (postId: number) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    await supabase.from("posts").update({ likes: post.likes + 1 }).eq("id", postId);
+    fetchPosts();
   };
 
-  const handleAnswerLike = (postId: number, answerId: number) => {
-    setPosts((prev) =>
-      prev.map((p) => p.id === postId ? {
-        ...p,
-        answers: p.answers.map((a) => a.id === answerId ? { ...a, likes: a.likes + 1 } : a),
-      } : p)
-    );
+  const handleAnswerLike = async (postId: number, answerId: number) => {
+    const post = posts.find(p => p.id === postId);
+    const answer = post?.answers.find(a => a.id === answerId);
+    if (!answer) return;
+    await supabase.from("answers").update({ likes: answer.likes + 1 }).eq("id", answerId);
+    fetchPosts();
   };
 
-  const handleVote = (postId: number, type: 'ari' | 'nashi') => {
-    setPosts(prev => prev.map(p => p.id === postId ? {
-      ...p,
-      ariCount: type === 'ari' ? p.ariCount + 1 : p.ariCount,
-      nashiCount: type === 'nashi' ? p.nashiCount + 1 : p.nashiCount
-    } : p));
+  const handleVote = async (postId: number, type: 'ari' | 'nashi') => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const update = type === 'ari' ? { ariCount: post.ariCount + 1 } : { nashiCount: post.nashiCount + 1 };
+    await supabase.from("posts").update(update).eq("id", postId);
+    fetchPosts();
   };
 
-  const handleEmojiReaction = (postId: number, emoji: string) => {
-    setPosts(prev => prev.map(p => p.id === postId ? {
-      ...p,
-      emojiReactions: { ...p.emojiReactions, [emoji]: (p.emojiReactions[emoji] || 0) + 1 }
-    } : p));
+  const handleEmojiReaction = async (postId: number, emoji: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const newReactions = { ...post.emojiReactions, [emoji]: (post.emojiReactions[emoji] || 0) + 1 };
+    await supabase.from("posts").update({ emojiReactions: newReactions }).eq("id", postId);
+    fetchPosts();
   };
 
-  const handleAddUpdate = (postId: number, text: string) => {
+  const handleAddUpdate = async (postId: number, text: string) => {
     if (!text.trim()) return;
-    setPosts(prev => prev.map(p => p.id === postId ? {
-      ...p,
-      updates: [...p.updates, { id: Date.now(), text, createdAt: getNow() }]
-    } : p));
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const newUpdates = [...(post.updates || []), { id: Date.now(), text, createdAt: getNow() }];
+    await supabase.from("posts").update({ updates: newUpdates }).eq("id", postId);
+    fetchPosts();
   };
 
-  const handleSetBestAnswer = (postId: number, answerId: number) => {
-    setPosts(prev => prev.map(p => p.id === postId ? {
-      ...p,
-      answers: p.answers.map(a => a.id === answerId ? { ...a, isBest: !a.isBest } : { ...a, isBest: false })
-    } : p));
+  const handleSetBestAnswer = async (postId: number, answerId: number) => {
+    if (!isAdmin) return;
+    // 全ての回答のisBestを一度リセットしてから特定の回答をセット
+    await supabase.from("answers").update({ isBest: false }).eq("post_id", postId);
+    await supabase.from("answers").update({ isBest: true }).eq("id", answerId);
+    fetchPosts();
   };
 
   const handleShareToX = (post: Post) => {
@@ -190,7 +223,7 @@ export default function Home() {
     window.open(url, "_blank");
   };
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <div style={{background:"#000", color:"#fff", height:"100vh", display:"flex", alignItems:"center", justifyContent:"center"}}>読み込み中...</div>;
 
   return (
     <main
@@ -273,8 +306,8 @@ export default function Home() {
               <Field label="長さ"><select style={selectStyle} value={length} onChange={(e) => setLength(e.target.value)}><option value="">選択</option><option>1h前後</option><option>2h前後</option><option>4h以上</option></select></Field>
               <Field label="何をしたか"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>映画</option><option>ドライブ</option><option>その他</option></select></Field>
               <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>盛り上がった</option><option>普通</option><option>微妙</option></select></Field>
-              <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>無視</option><option>継続中</option></select></Field>
-              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>優勝</option><option>空回り</option><option>失敗</option></select></Field>
+              <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>既読無視</option><option>継続中</option></select></Field>
+              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>脈あり（最高）</option><option>ふつう</option><option>微妙（空回り）</option><option>脈なし（失敗）</option></select></Field>
             </div>
             <Field label="相談内容" fullWidth>
               <textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
@@ -375,7 +408,7 @@ export default function Home() {
 function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   const [show, setShow] = useState(false);
-  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer" }}>+ 追いコイシルを追記する</button>;
+  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer" }}>+ 追記する</button>;
   return (
     <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
       <input placeholder="追記..." value={text} onChange={e => setText(e.target.value)} style={answerInputStyle} />
