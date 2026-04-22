@@ -82,7 +82,7 @@ export default function Home() {
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ★「恋を知る」説明の開閉用ステート (ご指示により追加)
+  // ★「恋を知る」説明の開閉用ステート (ここだけ追加)
   const [isConceptOpen, setIsConceptOpen] = useState(false);
 
   const TAG_OPTIONS = ["マッチングアプリ", "SNS", "職場恋愛", "学校", "既婚者", "復縁", "片思い", "脈なし?", "LINE", "電話", "デート前"];
@@ -323,7 +323,6 @@ export default function Home() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            {/* SVGロゴ */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <svg width="45" height="45" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M50 85C50 85 15 65 15 35C15 22.5 25 15 35 15C42.5 15 47.5 20 50 25C52.5 20 57.5 15 65 15C75 15 85 22.5 85 35C85 65 50 85 50 85Z" fill="#ff4d94"/>
@@ -365,7 +364,7 @@ export default function Home() {
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
             <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>KOISHIRU CONCEPT</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋の答え合わせは、<br />友達以外に頼もう。<br />恋を知る、コイシル。</h1>
-            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
+            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な**「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
             
             {/* ★「恋を知る」セクションのドロップダウン化 */}
             <div style={{ marginBottom: "34px" }}>
@@ -419,16 +418,21 @@ export default function Home() {
               <input type="password" maxLength={4} value={postKey} onChange={e => setPostKey(e.target.value.replace(/\D/g,''))} style={{...inputStyle, border: "1px solid rgba(52,152,219,0.3)"}} placeholder="例: 1234" />
             </Field>
 
+            {/* ★復元されたタグ自作パーツ */}
             <Field label="タグ（最大5つまで）">
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
                 {TAG_OPTIONS.map(tag => (
-                  <button key={tag} onClick={() => toggleTag(tag)} style={{ 
+                  <button key={tag} onClick={() => toggleTag(tag)} style={{ 
                     padding: "6px 12px", borderRadius: "10px", fontSize: "11px", border: "1px solid rgba(255,255,255,0.1)",
                     background: selectedTags.includes(tag) ? "#fff" : "rgba(255,255,255,0.03)",
                     color: selectedTags.includes(tag) ? "#000" : "#ccc",
                     cursor: "pointer", transition: "0.2s"
                   }}>{tag}</button>
                 ))}
+              </div>
+              <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                <input placeholder="新しいタグを作る..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
+                <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>追加</button>
               </div>
             </Field>
 
@@ -463,7 +467,7 @@ export default function Home() {
               currentPosts.map((post, idx) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const isGlobalIndex = indexOfFirstPost + idx;
+                const isGlobalIndex = indexOfLastPost + idx;
                 const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
 
                 return (
@@ -509,7 +513,7 @@ export default function Home() {
                       <AnswerBox post={post} onAnswer={handleAnswer} onAddUpdate={handleAddUpdate} />
                     </div>
 
-                    {/* ★アクションパーツの復元 */}
+                    {/* アクションパーツの復元 */}
                     <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
                       <button onClick={() => handlePostLike(post.id)} style={{...subButtonStyle, background: "rgba(255,77,148,0.1)", color: "#ff4d94"}}>❤ {post.likes}</button>
                       <button onClick={() => handleShareToX(post)} style={subButtonStyle}>Xで共有</button>
@@ -539,7 +543,7 @@ export default function Home() {
   );
 }
 
-// --- サブコンポーネント (完全維持) ---
+// --- サブコンポーネント (属性選択も完全維持) ---
 
 function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
   const [isOpen, setIsOpen] = useState(false);
@@ -548,8 +552,8 @@ function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
 
   return (
     <div style={{ marginBottom: "15px" }}>
-      <button onClick={() => setIsOpen(!isOpen)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "#fff", fontSize: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", fontWeight: "bold" }}>
-        <span>{isOpen ? "▲ 回答を閉じる" : `▼ 回答を見る (${count}件)`}</span>
+      <button onClick={() => setIsOpen(!isOpen)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "#fff", fontSize: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", width: "100%", textAlign: "left", fontWeight: "bold" }}>
+        <span>{isOpen ? "▲ 回答を閉じる" : `▼ フラットな視点を見る (${count}件)`}</span>
         {post.answers.some((a:any) => a.isBest) && <span style={{color: "#ffd700", marginLeft: "10px"}}>👑 答え合わせ完了</span>}
       </button>
       {isOpen && (
@@ -612,7 +616,7 @@ function AnswerBox({ post, onAnswer, onAddUpdate }: any) {
   return (
     <div style={{ background: "rgba(0,0,0,0.2)", padding: "18px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.03)" }}>
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
-        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>回答する</button>
+        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>フラットな視点</button>
         <button onClick={() => setIsAuthorMode(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: isAuthorMode ? "#3498db" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>本人返信</button>
       </div>
 
