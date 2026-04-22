@@ -1,12 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-// Vercelの環境変数からSupabaseクライアントを作成
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type Answer = {
   id: number;
@@ -16,7 +9,7 @@ type Answer = {
   likes: number;
   createdAt: string; // 投稿日時
   status: "pending" | "approved";
-  isBest?: boolean; // ベストアドバイス用
+  isBest?: boolean; // ★ベストアドバイス用
 };
 
 type Post = {
@@ -32,10 +25,10 @@ type Post = {
   selfFeeling: string;
   detail: string;
   likes: number;
-  ariCount: number; // 脈あり投票
-  nashiCount: number; // 脈なし投票
-  emojiReactions: { [key: string]: number }; // エモリアクション
-  updates: { id: number; text: string; createdAt: string }[]; // 追いLINE風追記
+  ariCount: number; // ★脈あり投票
+  nashiCount: number; // ★脈なし投票
+  emojiReactions: { [key: string]: number }; // ★エモリアクション
+  updates: { id: number; text: string; createdAt: string }[]; // ★追いLINE風追記
   answers: Answer[];
   createdAt: string; // 投稿日時
   status: "pending" | "approved";
@@ -57,42 +50,22 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 管理者設定
+  // ★管理者設定
   const ADMIN_PASSWORD = "koishiru-admin"; 
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // --- Supabaseからデータを取得 ---
-  const fetchPosts = async () => {
-    try {
-      const { data: postsData, error: postsError } = await supabase
-        .from("posts")
-        .select("*")
-        .order("id", { ascending: false });
-
-      const { data: answersData, error: answersError } = await supabase
-        .from("answers")
-        .select("*")
-        .order("id", { ascending: true });
-
-      if (postsError || answersError) throw postsError || answersError;
-
-      const combined = (postsData || []).map((p: any) => ({
-        ...p,
-        answers: (answersData || []).filter((a: any) => a.post_id === p.id)
-      }));
-
-      setPosts(combined);
-    } catch (e) {
-      console.error("Fetch Error:", e);
-    } finally {
-      setIsLoaded(true);
-    }
-  };
+  useEffect(() => {
+    const saved = localStorage.getItem("koishiru_final_master");
+    if (saved) setPosts(JSON.parse(saved));
+    setIsLoaded(true);
+  }, []);
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    if (isLoaded) {
+      localStorage.setItem("koishiru_final_master", JSON.stringify(posts));
+    }
+  }, [posts, isLoaded]);
 
   const checkAdmin = (val: string) => {
     setInputPass(val);
@@ -108,24 +81,16 @@ export default function Home() {
     return `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   };
 
-  // --- 投稿 (Supabaseへ) ---
-  const handlePost = async () => {
+  const handlePost = () => {
     if (!detail.trim()) {
       setNotice("相談内容を入力してください。");
       return;
     }
 
-    const newPost = {
+    const newPost: Post = {
       id: Date.now(),
       name: postName.trim() || "名無し",
-      meet: meet || "未選択",
-      relationship: relationship || "未選択",
-      time: time || "未選択",
-      length: length || "未選択",
-      dateType: dateType || "未選択",
-      reaction: reaction || "未選択",
-      afterStatus: afterStatus || "未選択",
-      selfFeeling: selfFeeling || "未選択",
+      meet, relationship, time, length, dateType, reaction, afterStatus, selfFeeling,
       detail: detail.trim(),
       status: "approved",
       likes: 0,
@@ -133,114 +98,99 @@ export default function Home() {
       nashiCount: 0,
       emojiReactions: { "それな": 0, "沼": 0, "尊い": 0, "草": 0 },
       updates: [],
+      answers: [],
       createdAt: getNow(),
     };
 
-    const { error } = await supabase.from("posts").insert([newPost]);
-    
-    if (error) {
-      console.error("Insert Error:", error);
-      setNotice("投稿エラー: " + error.message);
-      return;
-    }
-
-    setNotice("投稿が完了しました！");
-    // 入力欄をリセット
+    setPosts([newPost, ...posts]);
     setPostName(""); setMeet(""); setRelationship(""); setTime(""); setLength("");
     setDateType(""); setReaction(""); setAfterStatus(""); setSelfFeeling(""); setDetail("");
-    
-    // 最新データを再取得
-    fetchPosts();
+    setNotice("投稿が完了しました");
   };
 
-  const handleDeletePost = async (postId: number) => {
+  const handleDeletePost = (postId: number) => {
     if (!isAdmin) return;
     if (confirm("この相談を削除しますか？")) {
-      await supabase.from("posts").delete().eq("id", postId);
-      fetchPosts();
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
     }
   };
 
-  const handleDeleteAnswer = async (postId: number, answerId: number) => {
+  const handleDeleteAnswer = (postId: number, answerId: number) => {
     if (!isAdmin) return;
     if (confirm("この回答を削除しますか？")) {
-      await supabase.from("answers").delete().eq("id", answerId);
-      fetchPosts();
+      setPosts((prev) => prev.map((p) => p.id === postId ? {
+        ...p,
+        answers: p.answers.filter((a) => a.id !== answerId)
+      } : p));
     }
   };
 
-  const handleAnswer = async (postId: number, name: string, attr: string, text: string) => {
+  const handleAnswer = (postId: number, name: string, attr: string, text: string) => {
     if (!text.trim()) return;
-    const newAnswer = {
-      id: Date.now(),
-      post_id: postId,
-      name: name.trim() || "名無し",
-      attr: attr || "未設定",
-      text: text.trim(),
-      likes: 0,
-      status: "approved",
-      createdAt: getNow(),
-      isBest: false
-    };
-    await supabase.from("answers").insert([newAnswer]);
-    fetchPosts();
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? {
+          ...p,
+          answers: [...p.answers, {
+            id: Date.now(),
+            name: name.trim() || "名無し",
+            attr, text: text.trim(), likes: 0, status: "approved", createdAt: getNow(),
+          }],
+        } : p
+      )
+    );
   };
 
-  const handlePostLike = async (postId: number) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    await supabase.from("posts").update({ likes: post.likes + 1 }).eq("id", postId);
-    fetchPosts();
+  const handlePostLike = (postId: number) => {
+    setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
   };
 
-  const handleAnswerLike = async (postId: number, answerId: number) => {
-    const post = posts.find(p => p.id === postId);
-    const answer = post?.answers.find(a => a.id === answerId);
-    if (!answer) return;
-    await supabase.from("answers").update({ likes: (answer.likes || 0) + 1 }).eq("id", answerId);
-    fetchPosts();
+  const handleAnswerLike = (postId: number, answerId: number) => {
+    setPosts((prev) =>
+      prev.map((p) => p.id === postId ? {
+        ...p,
+        answers: p.answers.map((a) => a.id === answerId ? { ...a, likes: a.likes + 1 } : a),
+      } : p)
+    );
   };
 
-  const handleVote = async (postId: number, type: 'ari' | 'nashi') => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    const update = type === 'ari' ? { ariCount: post.ariCount + 1 } : { nashiCount: post.nashiCount + 1 };
-    await supabase.from("posts").update(update).eq("id", postId);
-    fetchPosts();
+  const handleVote = (postId: number, type: 'ari' | 'nashi') => {
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      ariCount: type === 'ari' ? p.ariCount + 1 : p.ariCount,
+      nashiCount: type === 'nashi' ? p.nashiCount + 1 : p.nashiCount
+    } : p));
   };
 
-  const handleEmojiReaction = async (postId: number, emoji: string) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    const currentEmojiData = post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 };
-    const newReactions = { ...currentEmojiData, [emoji]: (currentEmojiData[emoji] || 0) + 1 };
-    await supabase.from("posts").update({ emojiReactions: newReactions }).eq("id", postId);
-    fetchPosts();
+  const handleEmojiReaction = (postId: number, emoji: string) => {
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      emojiReactions: { ...p.emojiReactions, [emoji]: (p.emojiReactions[emoji] || 0) + 1 }
+    } : p));
   };
 
-  const handleAddUpdate = async (postId: number, text: string) => {
+  const handleAddUpdate = (postId: number, text: string) => {
     if (!text.trim()) return;
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    const newUpdates = [...(post.updates || []), { id: Date.now(), text, createdAt: getNow() }];
-    await supabase.from("posts").update({ updates: newUpdates }).eq("id", postId);
-    fetchPosts();
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      updates: [...p.updates, { id: Date.now(), text, createdAt: getNow() }]
+    } : p));
   };
 
-  const handleSetBestAnswer = async (postId: number, answerId: number) => {
-    if (!isAdmin) return;
-    await supabase.from("answers").update({ isBest: false }).eq("post_id", postId);
-    await supabase.from("answers").update({ isBest: true }).eq("id", answerId);
-    fetchPosts();
+  const handleSetBestAnswer = (postId: number, answerId: number) => {
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      answers: p.answers.map(a => a.id === answerId ? { ...a, isBest: !a.isBest } : { ...a, isBest: false })
+    } : p));
   };
 
   const handleShareToX = (post: Post) => {
-    const text = `【コイシル】投稿者：${post.name}\n${post.detail.substring(0, 50)}...\n#コイシル #恋愛相談`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`;
+    const text = `【コイシル】投稿者：${post.name}\n${post.detail}\n\n#コイシル #恋愛相談`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   };
 
-  if (!isLoaded) return <div style={{background:"#000", color:"#fff", height:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif"}}>読み込み中...</div>;
+  if (!isLoaded) return null;
 
   return (
     <main
@@ -275,7 +225,7 @@ export default function Home() {
                     .main-grid { flex-direction: row !important; align-items: start; }
                     .side-section { width: 450px !important; flex-shrink: 0; position: sticky; top: 20px; }
                 }
-                .meta-grid { grid-template-columns: repeat(2, 1fr) !important; display: grid; gap: 8px; margin-bottom: 16px; }
+                .meta-grid { grid-template-columns: repeat(2, 1fr) !important; }
                 @media (min-width: 640px) {
                     .meta-grid { grid-template-columns: repeat(4, 1fr) !important; }
                 }
@@ -284,45 +234,51 @@ export default function Home() {
           {/* Concept Card */}
           <section style={{ position: "relative", overflow: "hidden", borderRadius: "32px", padding: "clamp(24px, 6vw, 48px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)", flex: 1 }}>
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
-            <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>恋愛相談所</div>
+            <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>コイシル</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋愛の違和感を投稿して<br />本音の意見を集める。</h1>
-            <p style={{ margin: "0 0 34px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>コイシルは、恋愛の失敗談や、相手への小さな違和感を投稿し、第3者の視点から率直な意見をもらうことができる恋愛特化型の相談所です。</p>
+            <p style={{ margin: "0 0 34px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>コイシルは、恋愛の失敗談や、相手への小さな違和感を投稿し、第3者の視点から率直な意見をもらうことができる恋愛特化型の相談プラットフォームです。</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "28px" }}>
-              {[["01", "恋愛の違和感投稿"], ["02", "内容の確認"], ["03", "回答の収集"], ["04", "意見の共有"]].map(([num, title]) => (
+              {[["01", "恋愛の違和感を投稿"], ["02", "運営が内容を確認"], ["03", "回答を集める"], ["04", "役立つ相談を広げる"]].map(([num, title]) => (
                 <div key={num} style={{ padding: "16px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ fontSize: "10px", color: "#8f8f8f", marginBottom: "8px" }}>STEP {num}</div>
+                  <div style={{ fontSize: "10px", color: "#8f8f8f", marginBottom: "8px" }}>POINT {num}</div>
                   <div style={{ fontSize: "15px", fontWeight: 700 }}>{title}</div>
                 </div>
               ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
+              <div style={infoCardStyle}>
+                <div style={infoLabelStyle}>このページでできること</div>
+                <div style={infoTextStyle}>恋愛の違和感や失敗を整理して投稿し、他の人の視点から「何が問題だったのか」を知ることができます。</div>
+              </div>
+              <div style={infoCardStyle}>
+                <div style={infoLabelStyle}>公開ルール</div>
+                <div style={infoTextStyle}>投稿や回答は運営が確認後に修正・削除する場合があります。個人が特定される内容は公開しません。</div>
+              </div>
             </div>
           </section>
 
           {/* Post Form */}
           <section className="side-section" style={{ borderRadius: "32px", padding: "clamp(20px, 5vw, 32px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)" }}>
             <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
+              <div style={{ fontSize: "12px", letterSpacing: "0.12em", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
               <h2 style={{ margin: 0, fontSize: "26px", lineHeight: "1.15" }}>恋愛相談を投稿する</h2>
             </div>
-            
             <Field label="投稿者ペンネーム" fullWidth>
               <input placeholder="例：恋する会社員" value={postName} onChange={(e) => setPostName(e.target.value)} style={inputStyle} />
             </Field>
-
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "14px", marginBottom: "14px" }}>
               <Field label="出会い方"><select style={selectStyle} value={meet} onChange={(e) => setMeet(e.target.value)}><option value="">選択</option><option>マッチングアプリ</option><option>SNS</option><option>紹介</option><option>職場</option><option>学校</option><option>その他</option></select></Field>
-              <Field label="関係"><select style={selectStyle} value={relationship} onChange={(e) => setRelationship(e.target.value)}><option value="">選択</option><option>初対面</option><option>やり取りあり</option><option>知り合い</option></select></Field>
+              <Field label="関係"><select style={selectStyle} value={relationship} onChange={(e) => setRelationship(e.target.value)}><option value="">選択</option><option>初対面</option><option>少しやり取り</option><option>知り合い</option></select></Field>
               <Field label="時間帯"><select style={selectStyle} value={time} onChange={(e) => setTime(e.target.value)}><option value="">選択</option><option>昼</option><option>夜</option><option>深夜</option></select></Field>
               <Field label="長さ"><select style={selectStyle} value={length} onChange={(e) => setLength(e.target.value)}><option value="">選択</option><option>1h前後</option><option>2h前後</option><option>4h以上</option></select></Field>
-              <Field label="何をしたか"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>その他</option></select></Field>
+              <Field label="何をしたか"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>映画</option><option>ドライブ</option><option>その他</option></select></Field>
               <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>盛り上がった</option><option>普通</option><option>微妙</option></select></Field>
-              <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>既読無視</option><option>継続中</option></select></Field>
-              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>脈あり（最高）</option><option>ふつう</option><option>微妙（空回り）</option><option>脈なし（失敗）</option></select></Field>
+              <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>無視</option><option>継続中</option></select></Field>
+              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>優勝</option><option>空回り</option><option>失敗</option></select></Field>
             </div>
-
             <Field label="相談内容" fullWidth>
               <textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
             </Field>
-
             <button onClick={handlePost} style={mainButtonStyle}>相談を投稿する</button>
             {notice && <div style={{...noticeBoxStyle, color: notice.includes("完了") ? "#2ecc71" : "#e74c3c", marginTop: "10px"}}>{notice}</div>}
           </section>
@@ -339,11 +295,11 @@ export default function Home() {
             <div style={emptyTextStyle}>まだ投稿はありません。</div>
           ) : (
             posts.map((post) => {
-              const totalVotes = (post.ariCount || 0) + (post.nashiCount || 0);
+              const totalVotes = post.ariCount + post.nashiCount;
               const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
               return (
                 <div key={post.id} style={postCardStyle}>
-                  <div className="meta-grid">
+                  <div className="meta-grid" style={{display: "grid", gap: "8px", marginBottom: "16px"}}>
                     <Meta label="出会い" value={post.meet} />
                     <Meta label="関係" value={post.relationship} />
                     <Meta label="時間" value={post.time} />
@@ -375,20 +331,20 @@ export default function Home() {
                       {up.text}
                     </div>
                   ))}
-                  <UpdateInput onAdd={(text: string) => handleAddUpdate(post.id, text)} />
+                  <UpdateInput onAdd={(text) => handleAddUpdate(post.id, text)} />
 
                   <div style={{ marginTop: "16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                    <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes || 0}</button>
-                    <button onClick={() => handleShareToX(post)} style={subButtonStyle}>Xで共有</button>
+                    <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes}</button>
+                    <button onClick={() => handleShareToX(post)} style={subButtonStyle}>X</button>
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {Object.entries(post.emojiReactions || { "それな": 0, "沼": 0, "尊い": 0, "草": 0 }).map(([emoji, count]) => (
+                      {Object.entries(post.emojiReactions || {}).map(([emoji, count]) => (
                         <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
                       ))}
                     </div>
                   </div>
 
                   <div style={answerContainerStyle}>
-                    <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>回答一覧</div>
+                    <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>回答</div>
                     <div style={{ display: "grid", gap: "12px", marginBottom: "16px" }}>
                       {post.answers.map((ans) => (
                         <div key={ans.id} style={{ ...answerItemStyle, border: ans.isBest ? "1px solid #ffd700" : "1px solid rgba(255,255,255,0.06)" }}>
@@ -400,7 +356,7 @@ export default function Home() {
                             </div>
                           </div>
                           <div style={{fontSize: "14px"}}>{ans.text}</div>
-                          <button onClick={() => handleAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 8px", marginTop: "8px", background: "rgba(255,255,255,0.05)"}}>❤ {ans.likes || 0}</button>
+                          <button onClick={() => handleAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 8px", marginTop: "8px", background: "rgba(255,255,255,0.8)"}}>❤ {ans.likes}</button>
                         </div>
                       ))}
                     </div>
@@ -416,12 +372,10 @@ export default function Home() {
   );
 }
 
-// --- コンポーネント群 ---
-
 function UpdateInput({ onAdd }: { onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   const [show, setShow] = useState(false);
-  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer" }}>+ 追記を投稿する</button>;
+  if (!show) return <button onClick={() => setShow(true)} style={{ marginTop: "12px", background: "none", border: "none", color: "#3498db", fontSize: "11px", cursor: "pointer" }}>+ 追いコイシルを追記する</button>;
   return (
     <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
       <input placeholder="追記..." value={text} onChange={e => setText(e.target.value)} style={answerInputStyle} />
@@ -446,7 +400,7 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
           <option>20代・女性</option><option>20代・男性</option><option>30代以上</option><option>既婚・女性</option><option>既婚・男性</option>
         </select>
       </div>
-      <textarea placeholder="回答・アドバイスを投稿..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "60px"}} />
+      <textarea placeholder="アドバイスを投稿..." value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "60px"}} />
       <button onClick={() => { onAnswer(postId, name, attr, text); setName(""); setText(""); }} style={{...mainButtonStyle, padding: "10px", fontSize: "13px", marginTop: "8px"}}>回答を投稿する</button>
     </div>
   );
@@ -455,8 +409,6 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
 function Meta({ label, value }: { label: string; value: string }) {
   return <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}><div style={{ fontSize: "10px", color: "#666", marginBottom: "2px" }}>{label}</div><div style={{ fontSize: "12px", color: "#ddd" }}>{value || "-"}</div></div>;
 }
-
-// --- スタイル定義 ---
 
 const inputStyle = { width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.3)", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
 const selectStyle = { ...inputStyle, appearance: "none" as const };
