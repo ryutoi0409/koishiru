@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// Supabaseクライアントの初期化
+// --- Supabase クライアント初期化 ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -62,7 +62,7 @@ export default function Home() {
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // --- Supabaseからデータを取得 ---
+  // --- Supabaseからデータを取得する関数 ---
   const fetchPosts = async () => {
     try {
       const { data: postsData, error: postsError } = await supabase
@@ -129,6 +129,7 @@ export default function Home() {
     };
 
     const { error } = await supabase.from("posts").insert([newPost]);
+    
     if (error) {
       setNotice("投稿失敗: " + error.message);
       return;
