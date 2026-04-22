@@ -175,7 +175,6 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  // ★認証用関数 (一字一句維持しつつ削除権限にも流用)
   const checkAuth = (post: Post) => {
     if (isAdmin) return true;
     const input = prompt("秘密の鍵（4桁の数字）を入力してください");
@@ -191,7 +190,6 @@ export default function Home() {
     fetchPosts();
   };
 
-  // ★投稿者本人も削除可能に修正 (ロジックのみ変更)
   const handleDeletePost = async (post: Post) => {
     if (!checkAuth(post)) {
       alert("権限がありません");
@@ -267,7 +265,6 @@ export default function Home() {
     fetchPosts();
   };
 
-  // ★ベストアンサー設定 (投稿者/管理者のみ)
   const handleSetBestAnswer = async (postId: number, answerId: number) => {
     const post = posts.find(p => p.id === postId);
     if (!post || !checkAuth(post)) {
@@ -298,22 +295,20 @@ export default function Home() {
     }
   };
 
-  const filteredPosts = posts.filter(p => 
-    p.detail.includes(searchQuery) || 
-    p.name.includes(searchQuery) || 
-    p.tags?.some(t => t.includes(searchQuery))
-  );
+  const sortedPosts = [...posts]
+    .filter(p => 
+      p.detail.includes(searchQuery) || 
+      p.name.includes(searchQuery) || 
+      p.tags?.some(t => t.includes(searchQuery))
+    )
+    .sort((a, b) => {
+      if (filterTab === "盛り上がり") {
+        return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
+      }
+      return b.id - a.id;
+    });
 
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (filterTab === "盛り上がり") {
-      return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
-    }
-    return b.id - a.id;
-  });
-
-  const indexOfLastPost = currentPage * postsPerPage;
-  const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const currentPosts = sortedPosts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
   const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
 
   if (!isLoaded) return null;
@@ -373,7 +368,7 @@ export default function Home() {
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
             <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>KOISHIRU CONCEPT</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋の答え合わせは、<br />友達以外に頼もう。<br />恋を知る、コイシル。</h1>
-            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
+            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な**「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
             
             <div style={{ marginBottom: "34px" }}>
               <button 
@@ -403,7 +398,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Post Form (5項目を削除) */}
+          {/* Post Form */}
           <section className="side-section" style={{ borderRadius: "32px", padding: "clamp(20px, 5vw, 32px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)" }}>
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "12px", letterSpacing: "0.12em", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
@@ -437,7 +432,6 @@ export default function Home() {
                   }}>{tag}</button>
                 ))}
               </div>
-              {/* ★タグ追加機能 UIパーツ */}
               <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                 <input placeholder="新しいタグを作る..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
                 <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>追加</button>
@@ -474,7 +468,7 @@ export default function Home() {
               currentPosts.map((post, idx) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const isGlobalIndex = indexOfFirstPost + idx;
+                const isGlobalIndex = (currentPage - 1) * postsPerPage + idx;
                 const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
 
                 return (
@@ -533,7 +527,6 @@ export default function Home() {
                           <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
                         ))}
                       </div>
-                      {/* ★投稿者本人(要鍵)または管理者だけが削除可能 */}
                       <button onClick={() => handleDeletePost(post)} style={{ color: "#ff4d4d", fontSize: "11px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>
                     </div>
                   </div>
@@ -580,6 +573,7 @@ function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
                 </span>
                 <div style={{display: "flex", gap: "10px"}}>
                   <button onClick={() => onSetBest(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ffd700", fontSize: "10px", cursor: "pointer" }}>👑</button>
+                  {/* ★管理者のみ削除ボタンを表示 */}
                   {isAdmin && <button onClick={() => onDelete(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ff4d4d", fontSize: "10px", cursor: "pointer" }}>削除</button>}
                 </div>
               </div>
