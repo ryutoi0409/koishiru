@@ -321,7 +321,7 @@ export default function Home() {
         {/* Timeline Section (属性選択・管理者削除・いいね・ページネーション完全維持) */}
         <section style={{ marginTop: "48px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
-            <h2 style={{ margin: 0, fontSize: "28px" }}>答え合わせ一覧</h2>
+            <h2 style={{ margin: 0, fontSize: "28px" }}>恋愛相談一覧</h2>
             <div style={{ display: "flex", gap: "12px", flex: 1, justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap" }}>
               <input placeholder="検索..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ ...answerInputStyle, maxWidth: "250px", height: "42px", background: "rgba(255,255,255,0.05)" }} />
               <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
