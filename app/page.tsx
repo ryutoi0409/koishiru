@@ -57,7 +57,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 【追加】表示順切り替え用のステート
+  // 表示順切り替え用のステート
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
 
   // ★管理者設定
@@ -227,7 +227,7 @@ export default function Home() {
     window.open(url, "_blank");
   };
 
-  // 【追加】並び替えロジック
+  // 並び替えロジック
   const sortedPosts = [...posts].sort((a, b) => {
     if (filterTab === "盛り上がり") {
       return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
@@ -270,7 +270,7 @@ export default function Home() {
                     .main-grid { flex-direction: row !important; align-items: start; }
                     .side-section { width: 450px !important; flex-shrink: 0; position: sticky; top: 20px; }
                 }
-                .meta-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr) !important; gap: 8px; margin-bottom: 16px; }
                 @media (min-width: 640px) {
                     .meta-grid { grid-template-columns: repeat(4, 1fr) !important; }
                 }
@@ -319,7 +319,17 @@ export default function Home() {
               <Field label="何をしたか"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>映画</option><option>ドライブ</option><option>その他</option></select></Field>
               <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>盛り上がった</option><option>普通</option><option>微妙</option></select></Field>
               <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>無視</option><option>継続中</option></select></Field>
-              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>最高</option><option>好感触</option><option>普通</option><option>微妙</option><option>空回り</option><option>脈なし</option></select></Field>
+              <Field label="手応え">
+                <select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}>
+                  <option value="">選択</option>
+                  <option>最高（脈あり確信）</option>
+                  <option>好感触（また会えそう）</option>
+                  <option>普通（可もなく不可もなし）</option>
+                  <option>微妙（会話が盛り上がらず）</option>
+                  <option>空回り（やらかしたかも）</option>
+                  <option>脈なし（フェードアウト確定）</option>
+                </select>
+              </Field>
             </div>
             <Field label="相談内容" fullWidth>
               <textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
@@ -336,7 +346,6 @@ export default function Home() {
               <div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div>
               <h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2>
             </div>
-            {/* 【追加】並び替えタブ */}
             <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "10px" }}>
               <button onClick={() => setFilterTab("NEW")} style={{ ...tabBtnStyle, background: filterTab === "NEW" ? "rgba(255,255,255,0.1)" : "transparent" }}>NEW</button>
               <button onClick={() => setFilterTab("盛り上がり")} style={{ ...tabBtnStyle, background: filterTab === "盛り上がり" ? "rgba(255,255,255,0.1)" : "transparent" }}>盛り上がり</button>
@@ -350,21 +359,25 @@ export default function Home() {
               sortedPosts.map((post, index) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const isNew = index < 3 && filterTab === "NEW"; // 最新3件にバッジを表示
+                const showNewBadge = index < 3 && filterTab === "NEW";
 
                 return (
                   <div key={post.id} style={postCardStyle}>
-                    {/* 【追加】NEWバッジ表示 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                      {isNew && <span style={newBadgeStyle}>NEW</span>}
+                      {showNewBadge && <span style={newBadgeStyle}>NEW</span>}
                       <div style={{ color: "#cfcfcf", fontSize: "12px" }}>{post.name} <span style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</span></div>
                     </div>
                     
+                    {/* --- データ表示の修正箇所 --- */}
                     <div className="meta-grid" style={{display: "grid", gap: "8px", marginBottom: "16px"}}>
                       <Meta label="出会い" value={post.meet} />
                       <Meta label="関係" value={post.relationship} />
                       <Meta label="時間" value={post.time} />
+                      <Meta label="長さ" value={post.length} />
                       <Meta label="内容" value={post.dateType} />
+                      <Meta label="反応" value={post.reaction} />
+                      <Meta label="その後" value={post.afterStatus} />
+                      <Meta label="手応え" value={post.selfFeeling} />
                     </div>
 
                     <div style={voteContainerStyle}>
@@ -417,7 +430,6 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
-                      {/* 【変更】年齢・属性を細かく選択できるAnswerBox */}
                       <AnswerBox postId={post.id} onAnswer={handleAnswer} />
                     </div>
                   </div>
@@ -447,7 +459,6 @@ function Field({ label, children, fullWidth = false }: { label: string; children
   return <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}><label style={{ display: "block", marginBottom: "6px", fontSize: "12px", color: "#8f8f8f" }}>{label}</label>{children}</div>;
 }
 
-// 【変更】年齢層、既婚選択、非公開対応の回答入力コンポーネント
 function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
