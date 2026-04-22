@@ -553,7 +553,7 @@ function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
   return (
     <div style={{ marginBottom: "15px" }}>
       <button onClick={() => setIsOpen(!isOpen)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "#fff", fontSize: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", width: "100%", textAlign: "left", fontWeight: "bold" }}>
-        <span>{isOpen ? "▲ 回答を閉じる" : `▼ フラットな視点を見る (${count}件)`}</span>
+        <span>{isOpen ? "▲ 回答を閉じる" : `▼ 回答を見る (${count}件)`}</span>
         {post.answers.some((a:any) => a.isBest) && <span style={{color: "#ffd700", marginLeft: "10px"}}>👑 答え合わせ完了</span>}
       </button>
       {isOpen && (
@@ -616,7 +616,7 @@ function AnswerBox({ post, onAnswer, onAddUpdate }: any) {
   return (
     <div style={{ background: "rgba(0,0,0,0.2)", padding: "18px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.03)" }}>
       <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
-        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>フラットな視点</button>
+        <button onClick={() => setIsAuthorMode(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: !isAuthorMode ? "rgba(255,255,255,0.1)" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>回答する</button>
         <button onClick={() => setIsAuthorMode(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", fontSize: "11px", background: isAuthorMode ? "#3498db" : "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer" }}>本人返信</button>
       </div>
 
