@@ -319,7 +319,7 @@ export default function Home() {
               <Field label="何をしたか"><select style={selectStyle} value={dateType} onChange={(e) => setDateType(e.target.value)}><option value="">選択</option><option>カフェ</option><option>ご飯</option><option>飲み</option><option>映画</option><option>ドライブ</option><option>その他</option></select></Field>
               <Field label="反応"><select style={selectStyle} value={reaction} onChange={(e) => setReaction(e.target.value)}><option value="">選択</option><option>盛り上がった</option><option>普通</option><option>微妙</option></select></Field>
               <Field label="その後"><select style={selectStyle} value={afterStatus} onChange={(e) => setAfterStatus(e.target.value)}><option value="">選択</option><option>返信遅い</option><option>無視</option><option>継続中</option></select></Field>
-              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>優勝</option><option>空回り</option><option>失敗</option></select></Field>
+              <Field label="手応え"><select style={selectStyle} value={selfFeeling} onChange={(e) => setSelfFeeling(e.target.value)}><option value="">選択</option><option>最高</option><option>好感触</option><option>普通</option><option>微妙</option><option>空回り</option><option>脈なし</option></select></Field>
             </div>
             <Field label="相談内容" fullWidth>
               <textarea placeholder="例：マッチングアプリで知り合い..." value={detail} onChange={(e) => setDetail(e.target.value)} style={textareaStyle} />
