@@ -57,7 +57,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 【新機能】表示切り替え用のステート
+  // 【追加】表示順切り替え用のステート
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
 
   // ★管理者設定
@@ -227,7 +227,7 @@ export default function Home() {
     window.open(url, "_blank");
   };
 
-  // 【新機能】並び替えロジック
+  // 【追加】並び替えロジック
   const sortedPosts = [...posts].sort((a, b) => {
     if (filterTab === "盛り上がり") {
       return (b.ariCount + b.nashiCount) - (a.ariCount + a.nashiCount);
@@ -270,7 +270,7 @@ export default function Home() {
                     .main-grid { flex-direction: row !important; align-items: start; }
                     .side-section { width: 450px !important; flex-shrink: 0; position: sticky; top: 20px; }
                 }
-                .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr) !important; }
+                .meta-grid { grid-template-columns: repeat(2, 1fr) !important; }
                 @media (min-width: 640px) {
                     .meta-grid { grid-template-columns: repeat(4, 1fr) !important; }
                 }
@@ -329,14 +329,15 @@ export default function Home() {
           </section>
         </div>
 
-        {/* Timeline (新機能：切り替えタブ追加) */}
+        {/* Timeline */}
         <section style={{ marginTop: "40px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "20px", gap: "10px", flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div>
               <h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2>
             </div>
-            <div style={{ display: "flex", gap: "8px", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
+            {/* 【追加】並び替えタブ */}
+            <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "10px" }}>
               <button onClick={() => setFilterTab("NEW")} style={{ ...tabBtnStyle, background: filterTab === "NEW" ? "rgba(255,255,255,0.1)" : "transparent" }}>NEW</button>
               <button onClick={() => setFilterTab("盛り上がり")} style={{ ...tabBtnStyle, background: filterTab === "盛り上がり" ? "rgba(255,255,255,0.1)" : "transparent" }}>盛り上がり</button>
             </div>
@@ -349,12 +350,13 @@ export default function Home() {
               sortedPosts.map((post, index) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const showNewBadge = index < 3 && filterTab === "NEW";
+                const isNew = index < 3 && filterTab === "NEW"; // 最新3件にバッジを表示
 
                 return (
                   <div key={post.id} style={postCardStyle}>
+                    {/* 【追加】NEWバッジ表示 */}
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                      {showNewBadge && <span style={newBadgeStyle}>NEW</span>}
+                      {isNew && <span style={newBadgeStyle}>NEW</span>}
                       <div style={{ color: "#cfcfcf", fontSize: "12px" }}>{post.name} <span style={{ color: "#666", fontSize: "10px" }}>{post.createdAt}</span></div>
                     </div>
                     
@@ -415,7 +417,7 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
-                      {/* 【新機能：細分化属性対応のAnswerBox】 */}
+                      {/* 【変更】年齢・属性を細かく選択できるAnswerBox */}
                       <AnswerBox postId={post.id} onAnswer={handleAnswer} />
                     </div>
                   </div>
@@ -445,7 +447,7 @@ function Field({ label, children, fullWidth = false }: { label: string; children
   return <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}><label style={{ display: "block", marginBottom: "6px", fontSize: "12px", color: "#8f8f8f" }}>{label}</label>{children}</div>;
 }
 
-// 【新機能：属性細分化 AnswerBox】
+// 【変更】年齢層、既婚選択、非公開対応の回答入力コンポーネント
 function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
