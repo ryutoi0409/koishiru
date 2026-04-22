@@ -58,7 +58,6 @@ export default function Home() {
   const [selfFeeling, setSelfFeeling] = useState("");
   const [detail, setDetail] = useState("");
   
-  // ★追加機能用のステート（元のステートは一切削っていません）
   const [postKey, setPostKey] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
@@ -67,27 +66,20 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 表示順切り替え用のステート
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
-  
-  // ★検索用ステート
   const [searchQuery, setSearchQuery] = useState("");
   
-  // ページネーション用
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 4;
 
-  // ★管理者設定
   const ADMIN_PASSWORD = "koishiru-admin"; 
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ★「恋を知る」説明の開閉用ステート (ここだけ追加)
   const [isConceptOpen, setIsConceptOpen] = useState(false);
 
   const TAG_OPTIONS = ["マッチングアプリ", "SNS", "職場恋愛", "学校", "既婚者", "復縁", "片思い", "脈なし?", "LINE", "電話", "デート前"];
 
-  // --- Supabaseからデータを取得する関数 ---
   const fetchPosts = async () => {
     try {
       const { data: postsData, error: postsError } = await supabase
@@ -288,7 +280,6 @@ export default function Home() {
     }
   };
 
-  // --- 表示用フィルタリングとソート ---
   const filteredPosts = posts.filter(p => 
     p.detail.includes(searchQuery) || 
     p.name.includes(searchQuery) || 
@@ -320,7 +311,6 @@ export default function Home() {
       }}
     >
       <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -359,14 +349,12 @@ export default function Home() {
                 }
             `}</style>
 
-          {/* Concept Card (ドロップダウン化反映) */}
           <section style={{ position: "relative", overflow: "hidden", borderRadius: "32px", padding: "clamp(24px, 6vw, 48px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)", flex: 1 }}>
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
             <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>KOISHIRU CONCEPT</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋の答え合わせは、<br />友達以外に頼もう。<br />恋を知る、コイシル。</h1>
             <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な**「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
             
-            {/* ★「恋を知る」セクションのドロップダウン化 */}
             <div style={{ marginBottom: "34px" }}>
               <button 
                 onClick={() => setIsConceptOpen(!isConceptOpen)}
@@ -395,7 +383,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Post Form (5項目を削除) */}
           <section className="side-section" style={{ borderRadius: "32px", padding: "clamp(20px, 5vw, 32px)", background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.025) 100%)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 90px rgba(0,0,0,0.45)" }}>
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "12px", letterSpacing: "0.12em", color: "#8f8f8f", marginBottom: "10px" }}>START POST</div>
@@ -418,7 +405,6 @@ export default function Home() {
               <input type="password" maxLength={4} value={postKey} onChange={e => setPostKey(e.target.value.replace(/\D/g,''))} style={{...inputStyle, border: "1px solid rgba(52,152,219,0.3)"}} placeholder="例: 1234" />
             </Field>
 
-            {/* ★復元されたタグ自作パーツ */}
             <Field label="タグ（最大5つまで）">
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
                 {TAG_OPTIONS.map(tag => (
@@ -430,6 +416,7 @@ export default function Home() {
                   }}>{tag}</button>
                 ))}
               </div>
+              {/* ★タグ追加機能 UIパーツ */}
               <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                 <input placeholder="新しいタグを作る..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
                 <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>追加</button>
@@ -444,7 +431,6 @@ export default function Home() {
           </section>
         </div>
 
-        {/* Timeline Section */}
         <section style={{ marginTop: "48px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
             <div>
@@ -467,7 +453,7 @@ export default function Home() {
               currentPosts.map((post, idx) => {
                 const totalVotes = post.ariCount + post.nashiCount;
                 const ariPer = totalVotes === 0 ? 50 : Math.round((post.ariCount / totalVotes) * 100);
-                const isGlobalIndex = indexOfLastPost + idx;
+                const isGlobalIndex = indexOfFirstPost + idx;
                 const showNewBadge = filterTab === "NEW" && isGlobalIndex < 3;
 
                 return (
@@ -484,8 +470,14 @@ export default function Home() {
                       </div>
                     </div>
                     
+                    {/* ★タグ表示ロジック修正（制限なしで全表示） */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+                      {post.tags?.map((t, i) => (
+                        <span key={i} style={{ fontSize: "10px", color: "#3498db", background: "rgba(52,152,219,0.15)", padding: "2px 8px", borderRadius: "4px" }}>#{t}</span>
+                      ))}
+                    </div>
+
                     <div className="compact-meta-container">
-                      {post.tags?.map(t => <span key={t} style={{ fontSize: "10px", color: "#3498db", background: "rgba(52,152,219,0.15)", padding: "2px 8px", borderRadius: "4px" }}>#{t}</span>)}
                       <Meta label="出会い" value={post.meet} />
                       <Meta label="関係" value={post.relationship} />
                     </div>
@@ -513,7 +505,6 @@ export default function Home() {
                       <AnswerBox post={post} onAnswer={handleAnswer} onAddUpdate={handleAddUpdate} />
                     </div>
 
-                    {/* アクションパーツの復元 */}
                     <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
                       <button onClick={() => handlePostLike(post.id)} style={{...subButtonStyle, background: "rgba(255,77,148,0.1)", color: "#ff4d94"}}>❤ {post.likes}</button>
                       <button onClick={() => handleShareToX(post)} style={subButtonStyle}>Xで共有</button>
@@ -542,8 +533,6 @@ export default function Home() {
     </main>
   );
 }
-
-// --- サブコンポーネント (属性選択も完全維持) ---
 
 function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
   const [isOpen, setIsOpen] = useState(false);
@@ -660,13 +649,11 @@ function Meta({ label, value }: { label: string; value: string }) {
   );
 }
 
-// --- スタイル定義 (完全維持) ---
 const inputStyle = { width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.3)", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
 const selectStyle = { ...inputStyle, appearance: "none" as const };
 const textareaStyle = { ...inputStyle, minHeight: "120px", lineHeight: "1.6", resize: "vertical" as const };
 const mainButtonStyle = { width: "100%", padding: "16px", borderRadius: "14px", border: "none", background: "#fff", color: "#000", fontSize: "16px", fontWeight: 800, cursor: "pointer" };
 const subButtonStyle = { padding: "8px 14px", borderRadius: "10px", border: "none", background: "rgba(255,255,255,0.08)", color: "#fff", fontSize: "12px", cursor: "pointer" };
-const infoCardStyle = { padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" };
 const emptyTextStyle = { padding: "60px 20px", color: "#444", fontSize: "14px", textAlign: "center" as const };
 const postCardStyle = { borderRadius: "32px", padding: "24px" };
 const postDetailStyle = { lineHeight: "1.8", whiteSpace: "pre-wrap" as const, margin: "20px 0" };
