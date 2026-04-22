@@ -365,7 +365,7 @@ export default function Home() {
             <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "220px", height: "220px", borderRadius: "999px", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%)", pointerEvents: "none" }} />
             <div style={{ marginBottom: "18px", color: "#9a9a9a", fontSize: "13px", letterSpacing: "0.12em" }}>KOISHIRU CONCEPT</div>
             <h1 style={{ margin: "0 0 18px 0", fontSize: "clamp(28px, 6vw, 44px)", lineHeight: "1.2", fontWeight: 700 }}>恋の答え合わせは、<br />友達以外に頼もう。<br />恋を知る、コイシル。</h1>
-            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な**「恋のセカンドオピニオン」**をもらうことで、本当の状況を「知る」ための場所です。</p>
+            <p style={{ margin: "0 0 24px 0", color: "#c8c8c8", fontSize: "16px", lineHeight: "1.95", maxWidth: "640px" }}>友達は関係性を壊さないために、つい優しい言葉を選んでしまうもの 。コイシルは、あえて利害関係のない第3者から、残酷なほど客観的な**「恋のセカンドオピニオン」をもらうことで、本当の状況を「知る」ための場所です。</p>
             
             {/* ★「恋を知る」セクションのドロップダウン化 */}
             <div style={{ marginBottom: "34px" }}>
@@ -386,7 +386,7 @@ export default function Home() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "28px" }}>
-              {[["01", "小さな『モヤッ』を可視化", "些細な違和感を言語化。"], ["02", "本音だけど、荒れない管理", "独自の質を維持。"], ["03", "恋のセカンドオピニオン", "第3者がフラットに診断。"], ["04", "恋の失敗を、みんなの教訓に", "誰かの恋の羅針盤に。"]].map(([num, title, desc]) => (
+              {[["01", "『モヤッ』を可視化", "些細な違和感を言語化。"], ["02", "本音だけど、荒れない管理", "独自の質を維持。"], ["03", "恋のセカンドオピニオン", "第3者がフラットに診断。"], ["04", "恋の失敗を、みんなの教訓に", "誰かの恋の羅針盤に。"]].map(([num, title, desc]) => (
                 <div key={num} style={{ padding: "16px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ fontSize: "10px", color: "#8f8f8f", marginBottom: "8px" }}>STEP {num}</div>
                   <div style={{ fontSize: "15px", fontWeight: 700, marginBottom: "4px" }}>{title}</div>
@@ -548,7 +548,7 @@ function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
   return (
     <div style={{ marginBottom: "15px" }}>
       <button onClick={() => setIsOpen(!isOpen)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "#fff", fontSize: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", width: "100%", textAlign: "left", fontWeight: "bold" }}>
-        <span>{isOpen ? "▲ 回答を閉じる" : `▼ フラットな視点を見る (${count}件)`}</span>
+        <span>{isOpen ? "▲ 回答を閉じる" : `▼ 回答を見る (${count}件)`}</span>
         {post.answers.some((a:any) => a.isBest) && <span style={{color: "#ffd700", marginLeft: "10px"}}>👑 答え合わせ完了</span>}
       </button>
       {isOpen && (
@@ -635,7 +635,7 @@ function AnswerBox({ post, onAnswer, onAddUpdate }: any) {
 
       <textarea placeholder={isAuthorMode ? "回答への返信や状況の追記..." : "客観的な視点を投稿..."} value={text} onChange={(e) => setText(e.target.value)} style={{...answerInputStyle, minHeight: "80px", padding: "12px"}} />
       <button onClick={handleSubmit} style={{...mainButtonStyle, padding: "12px", fontSize: "14px", marginTop: "12px", background: isAuthorMode ? "#3498db" : "#fff", color: isAuthorMode ? "#fff" : "#000"}}>
-        {isAuthorMode ? "本人として投稿" : "視点を投稿する"}
+        {isAuthorMode ? "本人として投稿" : "回答を投稿する"}
       </button>
     </div>
   );
