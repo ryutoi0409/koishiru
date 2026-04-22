@@ -45,7 +45,7 @@ type Post = {
 };
 
 export default function Home() {
-  // フォームステート
+  // --- 投稿フォームステート ---
   const [postName, setPostName] = useState("");
   const [meet, setMeet] = useState("");
   const [relationship, setRelationship] = useState("");
@@ -57,21 +57,20 @@ export default function Home() {
   const [selfFeeling, setSelfFeeling] = useState("");
   const [detail, setDetail] = useState("");
   
-  // タグ関連
+  // --- タグ関連 ---
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
 
+  // --- 表示・管理ステート ---
   const [posts, setPosts] = useState<Post[]>([]);
   const [notice, setNotice] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // フィルタ・検索
   const [filterTab, setFilterTab] = useState<"NEW" | "盛り上がり">("NEW");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 4;
 
-  // 管理者
+  // --- 管理者設定 ---
   const ADMIN_PASSWORD = "koishiru-admin"; 
   const [inputPass, setInputPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -88,7 +87,11 @@ export default function Home() {
         answers: (answersData || []).filter((a: any) => a.post_id === p.id)
       }));
       setPosts(combined);
-    } catch (e: any) { console.error("Fetch Error:", e); } finally { setIsLoaded(true); }
+    } catch (e: any) {
+      console.error("Fetch Error:", e);
+    } finally {
+      setIsLoaded(true);
+    }
   };
 
   useEffect(() => { fetchPosts(); }, []);
@@ -140,14 +143,6 @@ export default function Home() {
     }
   };
 
-  const handleDeleteAnswer = async (postId: number, answerId: number) => {
-    if (!isAdmin) return;
-    if (confirm("この回答を削除しますか？")) {
-      await supabase.from("answers").delete().eq("id", answerId);
-      fetchPosts();
-    }
-  };
-
   const handleSetBestAnswer = async (postId: number, answerId: number) => {
     await supabase.from("answers").update({ isBest: false }).eq("post_id", postId);
     await supabase.from("answers").update({ isBest: true }).eq("id", answerId);
@@ -161,13 +156,6 @@ export default function Home() {
       attr, text: text.trim(), likes: 0, status: "approved", createdAt: getNow(), isBest: false
     };
     await supabase.from("answers").insert([newAnswer]);
-    fetchPosts();
-  };
-
-  const handlePostLike = async (postId: number) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-    await supabase.from("posts").update({ likes: (post.likes || 0) + 1 }).eq("id", postId);
     fetchPosts();
   };
 
@@ -204,12 +192,6 @@ export default function Home() {
     fetchPosts();
   };
 
-  const handleShareToX = (post: Post) => {
-    const text = `【コイシル】投稿者：${post.name}\n${post.detail}\n\n#コイシル #恋愛相談`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
-  };
-
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) setSelectedTags(selectedTags.filter(t => t !== tag));
     else if (selectedTags.length < 5) setSelectedTags([...selectedTags, tag]);
@@ -223,6 +205,7 @@ export default function Home() {
     }
   };
 
+  // --- 表示用ロジック ---
   const filteredPosts = posts.filter(p => 
     p.detail.includes(searchQuery) || 
     p.name.includes(searchQuery) || 
@@ -235,7 +218,8 @@ export default function Home() {
   });
 
   const indexOfLastPost = currentPage * postsPerPage;
-  const currentPosts = sortedPosts.slice(indexOfLastPost - postsPerPage, indexOfLastPost);
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
 
   if (!isLoaded) return null;
@@ -333,8 +317,8 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                <input placeholder="新しいタグ名..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
-                <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>作成</button>
+                <input placeholder="新しいタグを作る..." value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ ...inputStyle, padding: "8px", fontSize: "12px" }} />
+                <button onClick={addCustomTag} style={{ ...subButtonStyle, background: "#fff", color: "#000" }}>追加</button>
               </div>
             </Field>
 
@@ -351,7 +335,7 @@ export default function Home() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", gap: "10px", flexWrap: "wrap" }}>
             <div><div style={{ fontSize: "12px", color: "#8f8f8f", marginBottom: "8px" }}>RECENT POSTS</div><h2 style={{ margin: 0, fontSize: "24px" }}>恋愛相談一覧</h2></div>
             <div style={{ display: "flex", gap: "10px", flex: 1, justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
-              <input placeholder="キーワード・タグで検索..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ ...answerInputStyle, maxWidth: "250px", height: "40px" }} />
+              <input placeholder="キーワード・タグ検索..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ ...answerInputStyle, maxWidth: "250px", height: "40px" }} />
               <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
                 <button onClick={() => {setFilterTab("NEW"); setCurrentPage(1);}} style={{ ...tabBtnStyle, background: filterTab === "NEW" ? "rgba(255,255,255,0.1)" : "transparent" }}>NEW</button>
                 <button onClick={() => {setFilterTab("盛り上がり"); setCurrentPage(1);}} style={{ ...tabBtnStyle, background: filterTab === "盛り上がり" ? "rgba(255,255,255,0.1)" : "transparent" }}>HOT</button>
@@ -400,7 +384,7 @@ export default function Home() {
                       <span style={{ color: "#888" }}>脈なし {100 - ariPer}%</span>
                     </div>
                     <div style={gaugeBarStyle}><div style={{ ...ariGaugeStyle, width: `${ariPer}%` }} /></div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
                       <button onClick={() => handleVote(post.id, 'ari')} style={voteButtonStyle}>脈あり👍</button>
                       <button onClick={() => handleVote(post.id, 'nashi')} style={voteButtonStyle}>脈なし💀</button>
                     </div>
@@ -417,19 +401,17 @@ export default function Home() {
                   <UpdateInput onAdd={(text) => handleAddUpdate(post.id, text)} />
 
                   <div style={{ marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px" }}>
-                    <button onClick={() => handlePostLike(post.id)} style={subButtonStyle}>❤ {post.likes}</button>
-                    <button onClick={() => handleShareToX(post)} style={subButtonStyle}>X</button>
-                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {Object.entries(post.emojiReactions || {}).map(([emoji, count]) => (
-                        <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
-                      ))}
-                    </div>
+                    <button onClick={() => supabase.from("posts").update({ likes: (post.likes || 0) + 1 }).eq("id", post.id).then(()=>fetchPosts())} style={subButtonStyle}>❤ {post.likes}</button>
+                    <button onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('【コイシル】'+post.detail)}`, "_blank")} style={subButtonStyle}>X</button>
+                    {Object.entries(post.emojiReactions || {}).map(([emoji, count]) => (
+                      <button key={emoji} onClick={() => handleEmojiReaction(post.id, emoji)} style={emojiButtonStyle}>{emoji} {count || ""}</button>
+                    ))}
                     {isAdmin && <button onClick={() => handleDeletePost(post.id)} style={{ color: "#ff4d4d", fontSize: "10px", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}>削除</button>}
                   </div>
 
                   <div style={answerContainerStyle}>
                     <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px", color: "#fff" }}>アドバイス</div>
-                    <AnswerList post={post} isAdmin={isAdmin} onSetBest={handleSetBestAnswer} onAnswerLike={handleAnswerLike} onDeleteAnswer={handleDeleteAnswer} />
+                    <AnswerList post={post} isAdmin={isAdmin} onSetBest={handleSetBestAnswer} onLike={handleAnswerLike} onDelete={handleDeleteAnswer} />
                     <AnswerBox postId={post.id} onAnswer={handleAnswer} />
                   </div>
                 </div>
@@ -439,9 +421,9 @@ export default function Home() {
 
           {totalPages > 1 && (
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", marginTop: "30px", marginBottom: "50px" }}>
-              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...paginationBtnStyle, opacity: currentPage === 1 ? 0.3 : 1 }}>前へ</button>
+              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...paginationBtnStyle, opacity: currentPage === 1 ? 0.3 : 1 }}>← 前へ</button>
               <span style={{fontSize: "14px"}}>{currentPage} / {totalPages}</span>
-              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ ...paginationBtnStyle, opacity: currentPage === totalPages ? 0.3 : 1 }}>次へ</button>
+              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ ...paginationBtnStyle, opacity: currentPage === totalPages ? 0.3 : 1 }}>次へ →</button>
             </div>
           )}
         </section>
@@ -450,7 +432,9 @@ export default function Home() {
   );
 }
 
-function AnswerList({ post, isAdmin, onSetBest, onAnswerLike, onDeleteAnswer }: any) {
+// --- サブコンポーネント ---
+
+function AnswerList({ post, isAdmin, onSetBest, onLike, onDelete }: any) {
   const [isOpen, setIsOpen] = useState(false);
   const count = post.answers?.length || 0;
   if (count === 0) return <div style={{ fontSize: "11px", color: "#444", marginBottom: "15px" }}>回答はまだありません</div>;
@@ -469,11 +453,11 @@ function AnswerList({ post, isAdmin, onSetBest, onAnswerLike, onDeleteAnswer }: 
                 <span style={{ fontSize: "11px", color: "#777" }}>{ans.isBest && "👑 "}{ans.name} ({ans.attr}) <span style={{fontSize: "9px", marginLeft: "6px"}}>{ans.createdAt}</span></span>
                 <div style={{display: "flex", gap: "10px"}}>
                   <button onClick={() => onSetBest(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ffd700", fontSize: "10px", cursor: "pointer" }}>👑</button>
-                  {isAdmin && <button onClick={() => onDeleteAnswer(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ff4d4d", fontSize: "10px", cursor: "pointer" }}>削除</button>}
+                  {isAdmin && <button onClick={() => onDelete(post.id, ans.id)} style={{ background: "none", border: "none", color: "#ff4d4d", fontSize: "10px", cursor: "pointer" }}>削除</button>}
                 </div>
               </div>
               <div style={{ fontSize: "14px", color: "#ddd", lineHeight: "1.6" }}>{ans.text}</div>
-              <button onClick={() => onAnswerLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 10px", marginTop: "10px", background: "rgba(255,255,255,0.05)"}}>❤ {ans.likes}</button>
+              <button onClick={() => onLike(post.id, ans.id)} style={{...subButtonStyle, padding: "4px 10px", marginTop: "10px", background: "rgba(255,255,255,0.05)"}}>❤ {ans.likes}</button>
             </div>
           ))}
         </div>
@@ -492,7 +476,7 @@ function AnswerBox({ postId, onAnswer }: { postId: number; onAnswer: any }) {
 
   return (
     <div style={{ marginTop: "14px", padding: "18px", background: "rgba(255,255,255,0.03)", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.05)" }}>
-      <input placeholder="お名前" value={name} onChange={(e) => setName(e.target.value)} style={{...answerInputStyle, padding: "10px", marginBottom: "12px", fontSize: "13px"}} />
+      <input placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} style={{...answerInputStyle, padding: "10px", marginBottom: "12px", fontSize: "13px"}} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
         {!isPrivate ? (
           <>
